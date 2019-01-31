@@ -1,7 +1,8 @@
 #include"MetaSnp.h";
 #include <ctime>
+#include<boost/program_options.hpp>
 using namespace std;
-
+namespace po = boost::program_options;
 // Arguments and default values
 static std::string  inputFile_ = "";
 static std::string  outputFile_ = "out";
@@ -39,22 +40,183 @@ const double expectedMedianHanEskinHeterogeneityPart_[] = // from nStudy 2 to 50
 
 void printErrorAndQuit(std::string msg);
 
-void handleArguments(std::string args[]) {
-	if (args->size() == 0) {
-		cout << "ERROR: No argument. Please type './metasoft -help' to see a list of options" << endl;
-		exit(-1);
+void handleArguments(int argc, char* argv[]) {
+	boost::program_options::options_description desc("Allowed Options");
+	desc.add_options()
+		("help", "Print help")
+		("input", po::value<std::string>(), "Input file (Required)")
+		("output", po::value<std::string>(), "Output file (default='out')")
+		("pvalue_table", po::value<std::string>(), "value table file (default='HanEskinPvalueTable.txt')")
+		("log", po::value<std::string>(), "Log file (default='log')")
+		("lambda_mean", po::value<double>(), "(Random Effects) User-specified lambda for mean effect part (default=1.0)")
+		("lambda_hetero", po::value<double>(), "(Random Effects) User-specified lambda for heterogeneity part (default=1.0)")
+		("mvalue", po::bool_switch()->default_value(false), "Compute m-value(default=false)")
+		("mvalue_prior_sigma", po::value<double>(), "Sigma value for normal prior N(0, sigma^2) for effect (default=0.2)")
+		("mvalue_prior_beta", po::value<std::string>(), "Alpha and Beta value for Beta dist prior Betadist(alpha,beta) for existence of effect (default=1.0,1.0)")
+		("mvalue_p_thres", po::value<double>(), "Compute m-values only for SNPs whose FE or RE2 p-value is below this threshold (default=1E-7)")
+		("mvalue_method", po::value<std::string>(), "Which method to use to calculate m-value between 'exact' and 'mcmc' (default=exact)")
+		("mcmc_sample", po::value<long>(), "(MCMC) Number of samples (default=10,000)")
+		("mcmc_burnin", po::value<long>(), "(MCMC) Number of burn-in (default=1,000)")
+		("mcmc_prob_random_move", po::value<double>(), "(MCMC) Probability that a complete randomization move is suggested (default=0.01)")
+		("mcmc_max_num_flip", po::value<double>(), "(MCMC) Usual move is flipping N bits where N ~ U(1,max_num_flip). If an integer value i >= 1 is given, max_num_flip = i. If a float value 0 < k < 1 is given, max_num_flip = k * #studies. (default=0.1)")
+		("binary_effects", po::value<std::string>(), "Compute binary effects model p-value (default=false)")
+		("binary_effects_sample", po::value<long>(), "(Binary effects) Number of importance sampling samples (default=1,000)")
+		("binary_effects_large", po::value<long>(), "(Binary effects) Large number of importance sampling samples for p-values above threshold (default=100,000)")
+		("binary_effect_p_thres", po::value<double>(), "(Binary effects) P-value threshold determining if we will use large number of samples (default=1E-4)")
+		("seed", po::value<int>(), "Random number generator seed (default=0)")
+		("verbose", po::bool_switch()->default_value(false), "Print RSID verbosely per every 1,000 SNPs (default=false)")
+		;
+
+	po::variables_map vm;
+	po::store(po::parse_command_line(argc, argv, desc), vm);
+	
+
+	if (vm.count("help")) {
+		cout << desc << endl;
+		std::exit(1);
+	}
+	if (vm.count("input")) {
+		inputFile_ = vm["input"].as<std::string>();
+	}
+	
+	if (vm.count("output")) {
+		outputFile_ = vm["output"].as<std::string>();
+	}
+	if (vm.count("pvalue_table")) {
+		pvalueTableFile_ = vm["pvalue_table"].as<std::string>();
+	}
+	if (vm.count("log")) {
+		logFile_ = vm["log"].as<std::string>();
+	}
+	if (vm.count("lambda_mean")) {
+		inputLambdaMeanEffect_ = vm["lambda_mean"].as<double>();
+	}
+	if (vm.count("lambda_hetero")) {
+		inputLambdaHeterogeneity_ = vm["lambda_hetero"].as<double>();
+	}
+	if (vm.count("mvalue")) {
+		willComputeMvalue_ = true;
+		if (vm.count("mvalue_prior_sigma")) {
+			priorSigma_ = vm["mvalue_prior_sigma"].as<double>();
+		}
+		if (vm.count("mvalue_prior_beta")) {
+			priorAlpha_ = stod(vm["mvalue_prior_beta"].as<std::string>());
+			priorBeta_ = stod(vm["mvalue_prior_beta"].as<std::string>());
+		}
+		if (vm.count("mvalue_p_thres")) {
+			mvaluePvalueThreshold_ = vm["mvalue_p_thres"].as<double>();
+		}
+		if (vm.count("mvalue_method")) {
+			mvalueMethod_ = vm["mvalue_method"].as<std::string>();
+		}
+		if (mvalueMethod_ == "mcmc") {
+			if (vm.count("mcmc_sample")) {
+				mcmcSample_ = vm["mcmc_sample"].as<long>();
+			}
+			if (vm.count("mcmc_burnin")) {
+				mcmcBurnin_ = vm["mcmc_burnin"].as<long>();
+			}
+			if (vm.count("mcmc_prob_random_move")) {
+				mcmcProbRandom_ = vm["mcmc_prob_random_move"].as<double>();
+			}
+			if (vm.count("mcmc_max_num_flip")) {
+				mcmcMaxNumFlip_ = vm["mcmc_max_num_flip"].as<double>();
+			}
+		}
+	}
+	if (vm.count("binary_effects")) {
+		willComputeBinaryEffects_ = true;
+		if (vm.count("binary_effects_sample")) {
+			binaryEffectsSample_ = vm["binary_effects_sample"].as<long>();
+		}
+		if (vm.count("binary_effects_large")) {
+			binaryEffectsLargeSample_ = vm["binary_effects_large"].as<long>();
+		}
+		if (vm.count("binary_effects_p_thres")) {
+			binaryEffectsPvalueThreshold_ = vm["binary_effects_p_thres"].as<double>();
+		}
+	}
+	if (vm.count("seed")) {
+		seed_ = vm["seed"].as<int>();
+	}
+	if (vm["verbose"].as<bool>() == true) {
+		isVerbose_ = true;
+	}
+	if (vm.count("help")) {
+		std::cout << "------------------------------------------------"<<endl;
+		std::cout << "The format of input_file:" << endl;
+		std::cout << "  Each row is each SNP." << endl;
+		std::cout << "  1st column is RSID." << endl;
+		std::cout << "  2nd and 3rd column are beta and its standard error for 1st study." << endl;
+		std::cout << "  4th and 5th column are beta and its standard error for 2nd study." << endl;
+		std::cout << "  6th and 7th column are beta and its standard error for 3rd study." << endl;
+		std::cout << "  and so on..." << endl;
+		std::cout << "------------------------------------------------" << endl;
+		std::cout << endl;
+		std::exit(-1);
 	}
 
-	for (int i = 0; i < args->size(); i++) {
-		cout << args[i] << endl;
-	}
 
-	exit(-1);
+	std::cout << "-------- Processing arguments ---------" << std::endl;
+	if (inputFile_ == "") {
+		printErrorAndQuit("A valid input file must be specified using option -input");
+	}
+	if (inputLambdaMeanEffect_ <= 0.0) {
+		printErrorAndQuit("lambda_mean option takes a float value > 0");
+	}
+	if (inputLambdaHeterogeneity_ <= 0.0) {
+		printErrorAndQuit("lambda_hetero option takes a float value > 0");
+	}
+	if (priorSigma_ <= 0.0) {
+		printErrorAndQuit("mvalue_prior_sigma option takes a float value > 0");
+	}
+	if (priorAlpha_ <= 0.0 || priorBeta_ <= 0.0) {
+		printErrorAndQuit("mvalue_prior_beta option takes two float values > 0");
+	}
+	if (mvaluePvalueThreshold_ < 0.0 || mvaluePvalueThreshold_ > 1.0) {
+		printErrorAndQuit("mvalue_p_thres takes a float value between 0 and 1");
+	}
+	if (mvalueMethod_ != "exact" &&
+		mvalueMethod_ != "mcmc" &&
+		mvalueMethod_ != "variational") {
+		printErrorAndQuit("mvalue_method option only takes a value 'exact' or 'mcmc'");
+	}
+	if (mcmcSample_ < 1) {
+		printErrorAndQuit("mcmc_sample option takes an integer value > 0");
+	}
+	if (mcmcBurnin_ < 1) {
+		printErrorAndQuit("mcmc_burnin option takes an integer value > 0");
+	}
+	if (mcmcSample_ < mcmcBurnin_) {
+		printErrorAndQuit("mcmc_sample must be larger than mcmc_burnin");
+	}
+	if (mcmcProbRandom_ < 0.0 || mcmcProbRandom_ > 1.0) {
+		printErrorAndQuit("mcmc_prob_random takes a float value between 0 and 1");
+	}
+	if (mcmcMaxNumFlip_ <= 0.0) {
+		printErrorAndQuit("mcmc_max_num_flip takes a value > 0");
+	}
+	if (binaryEffectsSample_ < 1) {
+		printErrorAndQuit("binary_effects_sample option takes an integer value > 0");
+	}
+	if (binaryEffectsLargeSample_ < 1) {
+		printErrorAndQuit("binary_effects_large option takes an integer value > 0");
+	}
+	if (binaryEffectsPvalueThreshold_ < 0.0 || binaryEffectsPvalueThreshold_ > 1.0) {
+		printErrorAndQuit("binary_effects_p_thres takes a float value between 0 and 1");
+	}
+	// Make summary for printing
+	
+	argsSummary_ = "";
+	for (int i = 0; i < argc;i++) {
+		argsSummary_ += std::string(argv[i]) + " ";
+	}
+	argsSummary_ += "\n";
 }
 
 void printErrorAndQuit(std::string msg) {
-	printf("%s\n",msg);
-	exit(-1);
+	printf("%s\n",msg.c_str());
+	std::exit(-1);
 }
 
 void doMetaAnalysis() {
@@ -112,22 +274,22 @@ void doMetaAnalysis() {
 								if (standardError <= 0.0) {
 									printf("Standard error cannot be <= zero (%d th column is %f) in the following line.\n",
 										2 * i + 3, standardError);
-									printf("%s",readLine);
-									exit(-1);
+									printf("%s",readLine.c_str());
+									std::exit(-1);
 								}
 								metaSnp->addStudy(beta, standardError);
 							}
 							catch (exception es) {
 								printf("Incorrect float value in following line. Possibly not a double");
-								printf("%s",readLine);
-								exit(-1);
+								printf("%s",readLine.c_str());
+								std::exit(-1);
 							}
 						}
 					}
 					if (metaSnp->getNStudy() > 1) {
 						// Analyze 1 Snp on-the-fly.
 						if (isVerbose_ && numSnps_ % 1000 == 0) {
-							printf("Analyzing SNP #%d (%s)\n", numSnps_ + 1, rsid);
+							printf("Analyzing SNP #%d (%s)\n", numSnps_ + 1, rsid.c_str());
 						}
 						// FE, RE, and New RE
 						metaSnp->computeFixedEffects();
@@ -175,14 +337,14 @@ void doMetaAnalysis() {
 	}
 	catch (exception e) {
 		printf("ERROR: error encountered while reading input file");
-		exit(-1);
+		std::exit(-1);
 	}
 	try {
 		fclose(inFile);
 	}
 	catch (exception e) {
 		printf("ERROR: file cannot be closed");
-		exit(-1);
+		std::exit(-1);
 	}
 }
 
@@ -212,11 +374,11 @@ void printLog() {
 	try {
 		FILE* outFile = fopen(logFile_.c_str(),"w");
 		
-		fprintf(outFile,"Arguments: %s ", argsSummary_);
-		fprintf(outFile,"Input File: %s\n", inputFile_);
-		fprintf(outFile,"Output File: %s\n", outputFile_);
-		fprintf(outFile,"Log File: %s\n", logFile_);
-		fprintf(outFile,"p-value Table File: %s\n", pvalueTableFile_);
+		fprintf(outFile,"Arguments: %s ", argsSummary_.c_str());
+		fprintf(outFile,"Input File: %s\n", inputFile_.c_str());
+		fprintf(outFile,"Output File: %s\n", outputFile_.c_str());
+		fprintf(outFile,"Log File: %s\n", logFile_.c_str());
+		fprintf(outFile,"p-value Table File: %s\n", pvalueTableFile_.c_str());
 		fprintf(outFile,"Number of SNPs analyzed: %d\n", numSnps_);
 		fprintf(outFile,"Maximum number of studies: %d\n", maxNumStudy_);
 		fprintf(outFile,"Specified lambda for   mean effect part (default = 1.0): %f\n", inputLambdaMeanEffect_);
@@ -227,24 +389,23 @@ void printLog() {
 	}
 	catch (exception e) {
 		printf("ERROR: error encountered while writing in log file");
-		exit(-1);
+		std::exit(-1);
 	}
 }
 
 
-int main(std::string args[]) {
+int main(int argc, char* argv[]) {	
 	time_t startTime = time(NULL);
-	handleArguments(args);
-	printf("Arguments: %s", argsSummary_);
+	handleArguments(argc, argv);
+	std::cout << "Arguments: " + argsSummary_ << std::endl;
 	MetaSnp::readPvalueTableFile(pvalueTableFile_);
-	printf("----- Performing meta-analysis\n");
+	std::cout<<"----- Performing meta-analysis\n";
 	doMetaAnalysis();
 	computeLambda();
 	printLog();
-	printf("----- Finished\n");
+	std::cout<<"----- Finished\n";
 	time_t endTime = time(NULL);
-	printf("----- Elapsed time: %.2f minutes\n",
-		(endTime - startTime) / (60 * 1000.0F));
+	std::cout << "----- Elapsed time: " << (endTime - startTime) / (60 * 1000.0F) << " minutes\n";
 
 	return NORMAL_EXECUTION;
 }

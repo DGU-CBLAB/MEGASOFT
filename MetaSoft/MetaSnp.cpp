@@ -6,19 +6,26 @@ using namespace std;
 java : Probability.chiSquareComplemented(v, x)
 c++ : 1 - boost::math::gamma_p<double,double>(v/2.0, x/2.0)
 */
+/*
+https://stackoverflow.com/questions/13042561/fatal-error-lnk1104-cannot-open-file-libboost-system-vc110-mt-gd-1-51-lib
+boost LNK problem solved
+*/
 
 vector<string> split(const string& str, const string& delim)
 {
 	vector<string> tokens;
 	size_t prev = 0, pos = 0;
-	do
-	{
+	do{
 		pos = str.find(delim, prev);
-		if (pos == string::npos) pos = str.length();
+		if (pos == string::npos) 
+			pos = str.length();
 		string token = str.substr(prev, pos - prev);
-		if (!token.empty()) tokens.push_back(token);
+		if (!token.empty()) 
+			tokens.push_back(token);
 		prev = pos + delim.length();
+		cout << token << endl;
 	} while (pos < str.length() && prev < str.length());
+
 	return tokens;
 }
 
@@ -1035,20 +1042,20 @@ void MetaSnp::readPvalueTableFile(std::string pvalueTableFile) {
 	try {
 		std::string readLine;
 		std::getline(infile, readLine); // ignore top row
-
+		
 		for (int i = 0; i < TABLE_NROW; i++) {
 			if (!std::getline(infile, readLine)) {
 				std::cout << "ERROR: Reading error from P-value Table file" << std::endl;
 				exit(-1);
 			}
-			std::vector<std::string> tokens = split(readLine, "\s+");
-
-			if (tokens.size() < TABLE_NCOLUMN + 1) {
+			std::vector<std::string> tokens = split(readLine, " ");
+			if (tokens.size() < TABLE_NCOLUMN+1) {
 				std::cout << "ERROR: P-value Table File has too few columns" << std::endl;
 				exit(-1);
 			}
 
 			for (int j = 0; j < TABLE_NCOLUMN; j++) {
+				cout << i << " : " << j << endl;
 				try {
 					pvalueTable_[i][j] = std::stod(tokens[j+1]);
 				}
@@ -1057,7 +1064,7 @@ void MetaSnp::readPvalueTableFile(std::string pvalueTableFile) {
 					exit(-1);
 				}
 			} // end of for(j)
-			
+
 		} // end of for(i)
 	}
 	catch (exception e) {
