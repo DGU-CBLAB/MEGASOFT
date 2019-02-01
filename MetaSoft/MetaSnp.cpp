@@ -3,12 +3,12 @@ using namespace std;
 
 
 /*
-java : Probability.chiSquareComplemented(v, x)
-c++ : 1 - boost::math::gamma_p<double,double>(v/2.0, x/2.0)
+	java : Probability.chiSquareComplemented(v, x)
+	c++ : 1 - boost::math::gamma_p<double,double>(v/2.0, x/2.0)
 */
 /*
-https://stackoverflow.com/questions/13042561/fatal-error-lnk1104-cannot-open-file-libboost-system-vc110-mt-gd-1-51-lib
-boost LNK problem solved
+	https://stackoverflow.com/questions/13042561/fatal-error-lnk1104-cannot-open-file-libboost-system-vc110-mt-gd-1-51-lib
+	boost LNK problem solved
 */
 
 vector<string> split(const string& str, const string& delim)
@@ -17,13 +17,16 @@ vector<string> split(const string& str, const string& delim)
 	size_t prev = 0, pos = 0;
 	do{
 		pos = str.find(delim, prev);
+		if (str.find("\t", prev) < pos) {
+			pos = str.find("\t", prev);
+		}
 		if (pos == string::npos) 
 			pos = str.length();
 		string token = str.substr(prev, pos - prev);
 		if (!token.empty()) 
 			tokens.push_back(token);
 		prev = pos + delim.length();
-		cout << token << endl;
+		//cout << token << endl;
 	} while (pos < str.length() && prev < str.length());
 
 	return tokens;
@@ -1053,18 +1056,19 @@ void MetaSnp::readPvalueTableFile(std::string pvalueTableFile) {
 				std::cout << "ERROR: P-value Table File has too few columns" << std::endl;
 				exit(-1);
 			}
-
+			cout << TABLE_NCOLUMN<< " - " <<tokens.size() << endl;
 			for (int j = 0; j < TABLE_NCOLUMN; j++) {
 				cout << i << " : " << j << endl;
 				try {
-					pvalueTable_[i][j] = std::stod(tokens[j+1]);
+					pvalueTable_[i][j] = std::stod(tokens.at(j+1));
 				}
 				catch (exception e) {
 					std::cout << "Incorrect float value in Pvalue Table file."<<std::endl;
 					exit(-1);
 				}
+				//cout << pvalueTable_[i][j] <<endl;
 			} // end of for(j)
-
+			tokens.clear();
 		} // end of for(i)
 	}
 	catch (exception e) {
