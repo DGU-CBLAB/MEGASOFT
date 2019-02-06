@@ -11,9 +11,8 @@ using namespace std;
 	boost LNK problem solved
 */
 
-vector<string> split(const string& str, const string& delim)
+void split(vector<string>& tokens, const string& str, const string& delim)
 {
-	vector<string> tokens;
 	size_t prev = 0, pos = 0;
 	do{
 		pos = str.find(delim, prev);
@@ -29,7 +28,7 @@ vector<string> split(const string& str, const string& delim)
 		//cout << token << endl;
 	} while (pos < str.length() && prev < str.length());
 
-	return tokens;
+	//return tokens;
 }
 
 double MetaSnp::ML_ESTIMATE_CHANGE_RATIO_THRESHOLD = 0.00001;
@@ -1045,21 +1044,22 @@ void MetaSnp::readPvalueTableFile(std::string pvalueTableFile) {
 	try {
 		std::string readLine;
 		std::getline(infile, readLine); // ignore top row
-		
+		std::vector<std::string> tokens;
+		tokens.resize(TABLE_NCOLUMN + 1);
 		for (int i = 0; i < TABLE_NROW; i++) {
 			if (!std::getline(infile, readLine)) {
 				std::cout << "ERROR: Reading error from P-value Table file" << std::endl;
 				exit(-1);
 			}
-			std::vector<std::string> tokens = split(readLine, " ");
+			cout << readLine << endl;
+			split(tokens, readLine, " ");
 			if (tokens.size() < TABLE_NCOLUMN+1) {
 				std::cout << "ERROR: P-value Table File has too few columns" << std::endl;
 				exit(-1);
 			}
-			cout << TABLE_NCOLUMN<< " - " <<tokens.size() << endl;
 			for (int j = 0; j < TABLE_NCOLUMN; j++) {
-				cout << i << " : " << j << endl;
 				try {
+					cout << i << " : " << j << " : " << tokens.at(j+1)<<endl;
 					pvalueTable_[i][j] = std::stod(tokens.at(j+1));
 				}
 				catch (exception e) {

@@ -23,7 +23,7 @@
 
 using namespace std;
 
-vector<string> split(const string& str, const string& delim);
+void split(vector<string>& vec,const string& str, const string& delim);
 
 class MetaSnp {
 private:

@@ -247,10 +247,11 @@ void doMetaAnalysis() {
 		// Read 1 Snp information
 		std::string readLine;
 		while (std::getline(inStream, readLine)) {
-			vector<std::string> tokens = split(readLine,"\\s+");
+			vector<std::string> tokens;
+			split(tokens, readLine, "\\s+");
 			if (tokens.size() > 1) {             // only if non-empty
-				if (tokens[0].at(0) != '#') { // only if non-comment
-					std::string rsid = tokens[0];
+				if (tokens.at(0).at(0) != '#') { // only if non-comment
+					std::string rsid = tokens.at(0);
 					metaSnp = new MetaSnp(rsid);
 					if (tokens.size() % 2 == 0)
 						printf("WARNING: # of Columns must be odd including Rsid. Last column is ignored.");
@@ -261,16 +262,16 @@ void doMetaAnalysis() {
 					for (int i = 0; i < nStudy; i++) {
 						double beta;
 						double standardError;
-						if (tokens[2 * i + 1].compare("NA") ||
-							tokens[2 * i + 1].compare("N/A") ||
-							tokens[2 * i + 2].compare("NA") ||
-							tokens[2 * i + 2].compare("N/A")) {
+						if (tokens.at(2 * i + 1).compare("NA") ||
+							tokens.at(2 * i + 1).compare("N/A") ||
+							tokens.at(2 * i + 2).compare("NA") ||
+							tokens.at(2 * i + 2).compare("N/A")) {
 							metaSnp->addNaStudy();
 						}
 						else {
 							try {
-								beta = stod(tokens[2 * i + 1]);
-								standardError = stod(tokens[2 * i + 2]);
+								beta = stod(tokens.at(2 * i + 1));
+								standardError = stod(tokens.at(2 * i + 2));
 								if (standardError <= 0.0) {
 									printf("Standard error cannot be <= zero (%d th column is %f) in the following line.\n",
 										2 * i + 3, standardError);
@@ -333,6 +334,7 @@ void doMetaAnalysis() {
 
 				}
 			}
+			tokens.clear();
 		}
 	}
 	catch (exception e) {
