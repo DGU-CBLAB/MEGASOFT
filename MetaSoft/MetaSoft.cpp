@@ -248,8 +248,9 @@ void doMetaAnalysis() {
 		std::ifstream inStream(inputFile_);
 		// Read 1 Snp information
 		std::string readLine;
+		int count = 0;
 		while (std::getline(inStream, readLine)) {
-			//cout << readLine << "." << endl;
+			cout << "count : " << count++ << endl;
 			vector<std::string> tokens;
 			split(tokens, readLine, " ");
 			if (tokens.size() > 1) {             // only if non-empty
@@ -316,10 +317,10 @@ void doMetaAnalysis() {
 						if (willComputeMvalue_) {
 							if (metaSnp->getPvalueFixedEffects() <= mvaluePvalueThreshold_ ||
 								metaSnp->getPvalueHanEskin() <= mvaluePvalueThreshold_) {
-								if (mvalueMethod_.compare("exact")) {
+								if (mvalueMethod_.compare("exact") ==0) {
 									metaSnp->computeMvalues(priorAlpha_, priorBeta_, priorSigma_);
 								}
-								else if (mvalueMethod_.compare("mcmc")) {
+								else if (mvalueMethod_.compare("mcmc")==0) {
 									metaSnp->computeMvaluesMCMC(priorAlpha_, priorBeta_, priorSigma_,
 										mcmcSample_, mcmcBurnin_, mcmcProbRandom_,
 										mcmcMaxNumFlip_,
@@ -333,7 +334,7 @@ void doMetaAnalysis() {
 						}
 						numSnps_++;
 					}
-					metaSnp->printResults(outputFile_);
+					metaSnp->printResults(outFile);
 
 				}
 			}
@@ -407,7 +408,9 @@ int main(int argc, char* argv[]) {
 	MetaSnp::readPvalueTableFile(pvalueTableFile_);
 	std::cout<<"----- Performing meta-analysis\n";
 	doMetaAnalysis();
+	cout << "---- Performing lambda compute\n";
 	computeLambda();
+	cout << "---- print Log\n";
 	printLog();
 	std::cout<<"----- Finished\n";
 	time_t endTime = time(NULL);

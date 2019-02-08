@@ -106,7 +106,7 @@ public:
 	double getStatisticBinaryEffects();
 	double getPvalueBinaryEffects();
 	static void printHeadings(FILE* outFile);
-	void printResults(std::string dir); // used to be static method
+	void printResults(FILE* f); // used to be static method
 
 public:
 	// Class-variable part for

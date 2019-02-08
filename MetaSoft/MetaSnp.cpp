@@ -974,8 +974,8 @@ void MetaSnp::printHeadings(FILE* outFile) {
 	fprintf(outFile,str.c_str());
 }
 
-void MetaSnp::printResults(std::string dir) {
-	FILE* f = fopen(dir.c_str(), "w");
+void MetaSnp::printResults(FILE* f) {
+	//FILE* f = fopen(dir.c_str(), "w");
 	fprintf(f,"%s\t", rsid_);
 	fprintf(f,"%d\t", nStudy_);
 	if (isFixedEffectsComputed_) {
@@ -1029,7 +1029,7 @@ void MetaSnp::printResults(std::string dir) {
 		}
 	}
 	fprintf(f, "\n");
-	fclose(f);
+	//fclose(f);
 }
 
 void MetaSnp::readPvalueTableFile(std::string pvalueTableFile) {
