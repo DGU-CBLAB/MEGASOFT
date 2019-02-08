@@ -6,7 +6,7 @@ namespace po = boost::program_options;
 // Arguments and default values
 static std::string  inputFile_ = "";
 static std::string  outputFile_ = "out";
-static std::string  logFile_ = "log";
+static std::string  logFile_ = ".\log";
 static std::string  pvalueTableFile_ = "HanEskinPvalueTable.txt";
 static double  inputLambdaMeanEffect_ = 1.0;
 static double  inputLambdaHeterogeneity_ = 1.0;
@@ -232,12 +232,14 @@ void doMetaAnalysis() {
 	}
 	catch (exception e) {
 		printErrorAndQuit("ERROR: Input file cannot be opened");
+		exit(-1);
 	}
 	try {
 		outFile = fopen(outputFile_.c_str(), "w");
 	}
 	catch (exception e) {
 		printErrorAndQuit("ERROR: Ouput file cannot be opened");
+		exit(-1);
 	}
 	// Print headings
 	MetaSnp::printHeadings(outFile);
@@ -247,8 +249,9 @@ void doMetaAnalysis() {
 		// Read 1 Snp information
 		std::string readLine;
 		while (std::getline(inStream, readLine)) {
+			//cout << readLine << "." << endl;
 			vector<std::string> tokens;
-			split(tokens, readLine, "\\s+");
+			split(tokens, readLine, " ");
 			if (tokens.size() > 1) {             // only if non-empty
 				if (tokens.at(0).at(0) != '#') { // only if non-comment
 					std::string rsid = tokens.at(0);
@@ -262,10 +265,10 @@ void doMetaAnalysis() {
 					for (int i = 0; i < nStudy; i++) {
 						double beta;
 						double standardError;
-						if (tokens.at(2 * i + 1).compare("NA") ||
-							tokens.at(2 * i + 1).compare("N/A") ||
-							tokens.at(2 * i + 2).compare("NA") ||
-							tokens.at(2 * i + 2).compare("N/A")) {
+						if (tokens.at(2 * i + 1).compare("NA") ==0 ||
+							tokens.at(2 * i + 1).compare("N/A")==0 ||
+							tokens.at(2 * i + 2).compare("NA") ==0 ||
+							tokens.at(2 * i + 2).compare("N/A")==0 ) {
 							metaSnp->addNaStudy();
 						}
 						else {
@@ -343,6 +346,7 @@ void doMetaAnalysis() {
 	}
 	try {
 		fclose(inFile);
+		fclose(outFile);
 	}
 	catch (exception e) {
 		printf("ERROR: file cannot be closed");

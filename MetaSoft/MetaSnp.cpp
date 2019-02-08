@@ -14,6 +14,7 @@ using namespace std;
 void split(vector<string>& tokens, const string& str, const string& delim)
 {
 	size_t prev = 0, pos = 0;
+	tokens.clear();
 	do{
 		pos = str.find(delim, prev);
 		if (str.find("\t", prev) < pos) {
@@ -22,8 +23,10 @@ void split(vector<string>& tokens, const string& str, const string& delim)
 		if (pos == string::npos) 
 			pos = str.length();
 		string token = str.substr(prev, pos - prev);
-		if (!token.empty()) 
+		
+		if (!token.empty()) {
 			tokens.push_back(token);
+		}
 		prev = pos + delim.length();
 		//cout << token << endl;
 	} while (pos < str.length() && prev < str.length());
@@ -35,7 +38,7 @@ double MetaSnp::ML_ESTIMATE_CHANGE_RATIO_THRESHOLD = 0.00001;
 double MetaSnp::LOG_SQRT2PI = 0.5*log(2 * M_PI);
 
 double MetaSnp::TABLE_MAX_THRESHOLD = 33.0;
-double** MetaSnp::pvalueTable_ = (double**)malloc(sizeof(double*)*TABLE_NROW);
+double** MetaSnp::pvalueTable_;
 bool MetaSnp::isPvalueTableRead_ = false;
 MetaSnp::MetaSnp(std::string rsid) {
 	rsid_ = rsid;
@@ -49,9 +52,6 @@ MetaSnp::MetaSnp(std::string rsid) {
 	// for In-class Initializer problem
 	//TABLE_MAX_THRESHOLD = 33.0;
 	//pvalueTable_ = (double**)malloc(sizeof(double*)*TABLE_NROW);
-	for (int i = 0; i < TABLE_NROW; i++) {
-		pvalueTable_[i] = (double*)malloc(sizeof(double)*TABLE_NCOLUMN);
-	}
 }
 
 void MetaSnp::addStudy(double beta, double standardError) {
@@ -1033,12 +1033,17 @@ void MetaSnp::printResults(std::string dir) {
 }
 
 void MetaSnp::readPvalueTableFile(std::string pvalueTableFile) {
+	pvalueTable_ = (double**)malloc(sizeof(double*)*TABLE_NROW);
+	for (int i = 0; i < TABLE_NROW; i++) {
+		pvalueTable_[i] = (double*)malloc(sizeof(double)*TABLE_NCOLUMN);
+	}
 	std::ifstream infile;
 	try {
 		infile = std::ifstream(pvalueTableFile);
 	}
 	catch (exception e) {
 		std::cout << "ERROR: P-value Table file Error" << std::endl;
+		exit(-1);
 	}
 
 	try {
@@ -1051,7 +1056,6 @@ void MetaSnp::readPvalueTableFile(std::string pvalueTableFile) {
 				std::cout << "ERROR: Reading error from P-value Table file" << std::endl;
 				exit(-1);
 			}
-			cout << readLine << endl;
 			split(tokens, readLine, " ");
 			if (tokens.size() < TABLE_NCOLUMN+1) {
 				std::cout << "ERROR: P-value Table File has too few columns" << std::endl;
@@ -1059,20 +1063,19 @@ void MetaSnp::readPvalueTableFile(std::string pvalueTableFile) {
 			}
 			for (int j = 0; j < TABLE_NCOLUMN; j++) {
 				try {
-					cout << i << " : " << j << " : " << tokens.at(j+1)<<endl;
 					pvalueTable_[i][j] = std::stod(tokens.at(j+1));
 				}
 				catch (exception e) {
 					std::cout << "Incorrect float value in Pvalue Table file."<<std::endl;
 					exit(-1);
 				}
-				//cout << pvalueTable_[i][j] <<endl;
 			} // end of for(j)
 			tokens.clear();
 		} // end of for(i)
 	}
 	catch (exception e) {
 		std::cout << "ERROR: error encountered while reading Pvalue Table file" << std::endl;
+		exit(-1);
 	}
 	isPvalueTableRead_ = true;
 }
