@@ -414,7 +414,7 @@ int main(int argc, char* argv[]) {
 	printLog();
 	std::cout<<"----- Finished\n";
 	time_t endTime = time(NULL);
-	std::cout << "----- Elapsed time: " << (endTime - startTime) / (60 * 1000.0F) << " minutes\n";
+	std::cout << "----- Elapsed time: " << difftime(endTime,startTime)/60.0 << " minutes\n";
 
 	return NORMAL_EXECUTION;
 }
