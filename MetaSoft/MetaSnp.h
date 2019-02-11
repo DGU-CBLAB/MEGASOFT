@@ -14,6 +14,9 @@
 #include<vector>
 #include<time.h>
 #include<math.h>
+#include<thread>
+#include<mutex>
+#include<map>
 #include<boost/math/distributions/normal.hpp>
 #include<boost/math/distributions/beta.hpp>
 #include<boost/math/distributions/find_location.hpp>
@@ -22,7 +25,16 @@
 #define ABNORMAL_EXECUTION -1
 
 using namespace std;
-
+class map_tuple {
+public:
+	int key;
+	std::string val;
+	map_tuple(int key, std::string val) {
+		this->key = key;
+		this->val = val;
+	}
+};
+bool map_comp(const map_tuple& a, const map_tuple& b);
 void split(vector<string>& vec,const string& str, const string& delim);
 
 class MetaSnp {
@@ -49,7 +61,6 @@ private:
 	double pvalueQ_;
 	double statisticISquare_;
 	double statisticTauSquare_;
-	bool isFixedEffectsComputed_ = false;
 	bool isRandomEffectsComputed_ = false;
 	bool isHeterogeneityComputed_ = false;
 	bool isHvaluesComputed_ = false;
@@ -65,6 +76,7 @@ private:
 	static double ML_ESTIMATE_CHANGE_RATIO_THRESHOLD;
 	static double LOG_SQRT2PI;
 public:
+	bool isFixedEffectsComputed_ = false;
 	MetaSnp(std::string rsid);
 	void addStudy(double beta, double standardError);
 	void addNaStudy();

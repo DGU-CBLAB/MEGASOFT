@@ -3,6 +3,9 @@
 #include<boost/program_options.hpp>
 using namespace std;
 namespace po = boost::program_options;
+
+static int threadNum_ = 1;
+static std::mutex mtx;
 // Arguments and default values
 static std::string  inputFile_ = "";
 static std::string  outputFile_ = "out";
@@ -65,6 +68,7 @@ void handleArguments(int argc, char* argv[]) {
 		("binary_effect_p_thres", po::value<double>(), "(Binary effects) P-value threshold determining if we will use large number of samples (default=1E-4)")
 		("seed", po::value<int>(), "Random number generator seed (default=0)")
 		("verbose", po::bool_switch()->default_value(false), "Print RSID verbosely per every 1,000 SNPs (default=false)")
+		("thread", po::value<int>(), "Set Number of Threads")
 		;
 
 	po::variables_map vm;
@@ -142,6 +146,9 @@ void handleArguments(int argc, char* argv[]) {
 	if (vm["verbose"].as<bool>() == true) {
 		isVerbose_ = true;
 	}
+	if (vm.count("thread")) {
+		threadNum_ = vm["thread"].as<int>();
+	}
 	if (vm.count("help")) {
 		std::cout << "------------------------------------------------"<<endl;
 		std::cout << "The format of input_file:" << endl;
@@ -218,14 +225,104 @@ void printErrorAndQuit(std::string msg) {
 	printf("%s\n",msg.c_str());
 	std::exit(-1);
 }
-
+void thr_func(std::string readLine, FILE* outFile) {
+	MetaSnp* metaSnp;    // Store only 1 Snp at a time in memory.
+	vector<std::string> tokens;
+	split(tokens, readLine, " ");
+	if (tokens.size() > 1) {             // only if non-empty
+		if (tokens.at(0).at(0) != '#') { // only if non-comment
+			std::string rsid = tokens.at(0);
+			metaSnp = new MetaSnp(rsid);
+			if (tokens.size() % 2 == 0)
+				printf("WARNING: # of Columns must be odd including Rsid. Last column is ignored.");
+			int nStudy = (int)((tokens.size() - 1) / 2);
+			if (nStudy > maxNumStudy_) {
+				maxNumStudy_ = nStudy;
+			}
+			for (int i = 0; i < nStudy; i++) {
+				double beta;
+				double standardError;
+				if (tokens.at(2 * i + 1).compare("NA") == 0 ||
+					tokens.at(2 * i + 1).compare("N/A") == 0 ||
+					tokens.at(2 * i + 2).compare("NA") == 0 ||
+					tokens.at(2 * i + 2).compare("N/A") == 0) {
+					metaSnp->addNaStudy();
+				}
+				else {
+					try {
+						beta = stod(tokens.at(2 * i + 1));
+						standardError = stod(tokens.at(2 * i + 2));
+						if (standardError <= 0.0) {
+							printf("Standard error cannot be <= zero (%d th column is %f) in the following line.\n",
+								2 * i + 3, standardError);
+							printf("%s", readLine.c_str());
+							std::exit(-1);
+						}
+						metaSnp->addStudy(beta, standardError);
+					}
+					catch (exception es) {
+						printf("Incorrect float value in following line. Possibly not a double");
+						printf("%s", readLine.c_str());
+						std::exit(-1);
+					}
+				}
+			}
+			if (metaSnp->getNStudy() > 1) {
+				// Analyze 1 Snp on-the-fly.
+				if (isVerbose_ && numSnps_ % 1000 == 0) {
+					printf("Analyzing SNP #%d (%s)\n", numSnps_ + 1, rsid.c_str());
+				}
+				// FE, RE, and New RE
+				metaSnp->computeFixedEffects();
+				metaSnp->computeRandomEffects();
+				metaSnp->computeHanEskin(inputLambdaMeanEffect_,
+					inputLambdaHeterogeneity_);
+				meanEffectParts_.push_back(metaSnp->getStatisticHanEskinMeanEffectPart());
+				double h = metaSnp->getStatisticHanEskinHeterogeneityPart();
+				if (h > 0.0) {
+					heterogeneityParts_.push_back(h);
+				}
+				// Binary effects model
+				if (willComputeBinaryEffects_) {
+					metaSnp->computeBinaryEffectsPvalue(binaryEffectsSample_, rand());
+					if (metaSnp->getPvalueBinaryEffects() <= binaryEffectsPvalueThreshold_) {
+						metaSnp->computeBinaryEffectsPvalue(binaryEffectsLargeSample_, rand());
+					}
+				}
+				// Mvalues
+				if (willComputeMvalue_) {
+					if (metaSnp->getPvalueFixedEffects() <= mvaluePvalueThreshold_ ||
+						metaSnp->getPvalueHanEskin() <= mvaluePvalueThreshold_) {
+						if (mvalueMethod_.compare("exact") == 0) {
+							metaSnp->computeMvalues(priorAlpha_, priorBeta_, priorSigma_);
+						}
+						else if (mvalueMethod_.compare("mcmc") == 0) {
+							metaSnp->computeMvaluesMCMC(priorAlpha_, priorBeta_, priorSigma_,
+								mcmcSample_, mcmcBurnin_, mcmcProbRandom_,
+								mcmcMaxNumFlip_,
+								rand());
+						}
+						else {
+							std::cout << mvalueMethod_ << endl;
+							assert(false);
+						}
+					}
+				}
+				numSnps_++;
+			}
+			mtx.lock();
+			metaSnp->printResults(outFile);
+			mtx.unlock();
+		}
+	}
+	tokens.clear();
+}
 void doMetaAnalysis() {
 	srand(time(NULL));
 	numSnps_ = 0;
 	maxNumStudy_ = 0;
 	meanEffectParts_ = std::vector<double>();
 	heterogeneityParts_ = std::vector<double>();
-	MetaSnp* metaSnp;    // Store only 1 Snp at a time in memory.
 	FILE* inFile, *outFile;
 	try {
 		inFile = fopen(inputFile_.c_str(), "r");
@@ -243,102 +340,35 @@ void doMetaAnalysis() {
 	}
 	// Print headings
 	MetaSnp::printHeadings(outFile);
-	
+
 	try {
 		std::ifstream inStream(inputFile_);
-		// Read 1 Snp information
 		std::string readLine;
 		int count = 0;
+		std::vector<std::thread> tr_vec;
 		while (std::getline(inStream, readLine)) {
-			cout << "count : " << count++ << endl;
-			vector<std::string> tokens;
-			split(tokens, readLine, " ");
-			if (tokens.size() > 1) {             // only if non-empty
-				if (tokens.at(0).at(0) != '#') { // only if non-comment
-					std::string rsid = tokens.at(0);
-					metaSnp = new MetaSnp(rsid);
-					if (tokens.size() % 2 == 0)
-						printf("WARNING: # of Columns must be odd including Rsid. Last column is ignored.");
-					int nStudy = (int)((tokens.size() - 1) / 2);
-					if (nStudy > maxNumStudy_) {
-						maxNumStudy_ = nStudy;
+			tr_vec.push_back(std::thread(thr_func, readLine, outFile));
+			bool b = false;
+			while (true) {
+				if (b == true || tr_vec.size() < threadNum_) {
+					break;
+				}
+				else {
+					std::this_thread::sleep_for(std::chrono::seconds(1));
+				}
+				for (int k = 0; k < tr_vec.size(); k++) {
+					if (tr_vec.at(k).joinable()) {
+						tr_vec.at(k).join();
+						tr_vec.erase(tr_vec.begin() + k);
+						b = true;
+						cout << "Count : " << ++count << endl;
+						break;
 					}
-					for (int i = 0; i < nStudy; i++) {
-						double beta;
-						double standardError;
-						if (tokens.at(2 * i + 1).compare("NA") ==0 ||
-							tokens.at(2 * i + 1).compare("N/A")==0 ||
-							tokens.at(2 * i + 2).compare("NA") ==0 ||
-							tokens.at(2 * i + 2).compare("N/A")==0 ) {
-							metaSnp->addNaStudy();
-						}
-						else {
-							try {
-								beta = stod(tokens.at(2 * i + 1));
-								standardError = stod(tokens.at(2 * i + 2));
-								if (standardError <= 0.0) {
-									printf("Standard error cannot be <= zero (%d th column is %f) in the following line.\n",
-										2 * i + 3, standardError);
-									printf("%s",readLine.c_str());
-									std::exit(-1);
-								}
-								metaSnp->addStudy(beta, standardError);
-							}
-							catch (exception es) {
-								printf("Incorrect float value in following line. Possibly not a double");
-								printf("%s",readLine.c_str());
-								std::exit(-1);
-							}
-						}
-					}
-					if (metaSnp->getNStudy() > 1) {
-						// Analyze 1 Snp on-the-fly.
-						if (isVerbose_ && numSnps_ % 1000 == 0) {
-							printf("Analyzing SNP #%d (%s)\n", numSnps_ + 1, rsid.c_str());
-						}
-						// FE, RE, and New RE
-						metaSnp->computeFixedEffects();
-						metaSnp->computeRandomEffects();
-						metaSnp->computeHanEskin(inputLambdaMeanEffect_,
-							inputLambdaHeterogeneity_);
-						meanEffectParts_.push_back(metaSnp->getStatisticHanEskinMeanEffectPart());
-						double h = metaSnp->getStatisticHanEskinHeterogeneityPart();
-						if (h > 0.0) {
-							heterogeneityParts_.push_back(h);
-						}
-						// Binary effects model
-						if (willComputeBinaryEffects_) {
-							metaSnp->computeBinaryEffectsPvalue(binaryEffectsSample_, rand());
-							if (metaSnp->getPvalueBinaryEffects() <= binaryEffectsPvalueThreshold_) {
-								metaSnp->computeBinaryEffectsPvalue(binaryEffectsLargeSample_, rand());
-							}
-						}
-						// Mvalues
-						if (willComputeMvalue_) {
-							if (metaSnp->getPvalueFixedEffects() <= mvaluePvalueThreshold_ ||
-								metaSnp->getPvalueHanEskin() <= mvaluePvalueThreshold_) {
-								if (mvalueMethod_.compare("exact") ==0) {
-									metaSnp->computeMvalues(priorAlpha_, priorBeta_, priorSigma_);
-								}
-								else if (mvalueMethod_.compare("mcmc")==0) {
-									metaSnp->computeMvaluesMCMC(priorAlpha_, priorBeta_, priorSigma_,
-										mcmcSample_, mcmcBurnin_, mcmcProbRandom_,
-										mcmcMaxNumFlip_,
-										rand());
-								}
-								else {
-									std::cout << mvalueMethod_ << endl;
-									assert(false);
-								}
-							}
-						}
-						numSnps_++;
-					}
-					metaSnp->printResults(outFile);
-
 				}
 			}
-			tokens.clear();
+		}
+		for (int i = 0; i < tr_vec.size(); i++) {
+			tr_vec.at(i).join();
 		}
 	}
 	catch (exception e) {
@@ -351,6 +381,38 @@ void doMetaAnalysis() {
 	}
 	catch (exception e) {
 		printf("ERROR: file cannot be closed");
+		std::exit(-1);
+	}
+
+	// Reorder the Result File
+	try {
+		std::string readLine;
+		FILE* file = fopen(outputFile_.c_str(), "r");
+		std::ifstream Instream(file);
+
+		std::getline(Instream, readLine); // ignore first line
+		
+		std::vector<map_tuple> total;
+
+		while (std::getline(Instream, readLine)) {
+			cout << readLine.substr(0, readLine.find('\t')) << endl;
+			map_tuple mt(stoi(readLine.substr(0, readLine.find('\t'))), readLine);
+			total.push_back(mt);
+		}
+
+		sort(total.begin(), total.end(), map_comp);
+		Instream.close();
+		FILE* outfile = fopen(outputFile_.c_str(), "w");
+		MetaSnp::printHeadings(outfile);
+		cout << total.size() << endl;
+		for (int i = 0; i < total.size(); i++) {
+			fprintf(outfile, "%s\n", total.at(i).val.c_str());
+		}
+		
+		fclose(outfile);
+	}
+	catch (exception e) {
+		printf("ERROR: Posterior.txt file has been altered!");
 		std::exit(-1);
 	}
 }

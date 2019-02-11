@@ -10,7 +10,9 @@ using namespace std;
 	https://stackoverflow.com/questions/13042561/fatal-error-lnk1104-cannot-open-file-libboost-system-vc110-mt-gd-1-51-lib
 	boost LNK problem solved
 */
-
+bool map_comp(const map_tuple& a, const map_tuple& b) {
+	return a.key < b.key;
+}
 void split(vector<string>& tokens, const string& str, const string& delim)
 {
 	size_t prev = 0, pos = 0;
@@ -979,25 +981,25 @@ void MetaSnp::printResults(FILE* f) {
 	fprintf(f,"%s\t", rsid_);
 	fprintf(f,"%d\t", nStudy_);
 	if (isFixedEffectsComputed_) {
-		fprintf(f,"%G\t", pvalueFixedEffects_);
-		fprintf(f,"%G\t", betaFixedEffects_);
-		fprintf(f,"%G\t", standardErrorFixedEffects_);
-		fprintf(f,"%G\t", pvalueRandomEffects_);
-		fprintf(f,"%G\t", betaRandomEffects_);
-		fprintf(f,"%G\t", standardErrorRandomEffects_);
-		fprintf(f,"%G\t", pvalueHanEskinTabulated_);
-		fprintf(f,"%G\t", statisticHanEskinMeanEffectPart_);
-		fprintf(f,"%G\t", statisticHanEskinHeterogeneityPart_);
+		fprintf(f,"%.6G\t", pvalueFixedEffects_);
+		fprintf(f,"%.6G\t", betaFixedEffects_);
+		fprintf(f,"%.6G\t", standardErrorFixedEffects_);
+		fprintf(f,"%.6G\t", pvalueRandomEffects_);
+		fprintf(f,"%.6G\t", betaRandomEffects_);
+		fprintf(f,"%.6G\t", standardErrorRandomEffects_);
+		fprintf(f,"%.6G\t", pvalueHanEskinTabulated_);
+		fprintf(f,"%.6G\t", statisticHanEskinMeanEffectPart_);
+		fprintf(f,"%.6G\t", statisticHanEskinHeterogeneityPart_);
 		if (isBinaryEffectsPvalueComputed_) {
-			fprintf(f,"%G\t", pvalueBinaryEffects_);
+			fprintf(f,"%.6G\t", pvalueBinaryEffects_);
 		}
 		else {
 			fprintf(f,"NA\t");
 		}
-		fprintf(f,"%G\t", statisticISquare_);
-		fprintf(f,"%G\t", statisticQ_);
-		fprintf(f,"%G\t", pvalueQ_);
-		fprintf(f,"%G\t", statisticTauSquare_);
+		fprintf(f,"%.6G\t", statisticISquare_);
+		fprintf(f,"%.6G\t", statisticQ_);
+		fprintf(f,"%.6G\t", pvalueQ_);
+		fprintf(f,"%.6G\t", statisticTauSquare_);
 	}
 	else { // if not, it must be a problematic SNPs with nStudy < 2; just print NA
 		for (int i = 0; i < 14; i++) fprintf(f,"NA\t");
