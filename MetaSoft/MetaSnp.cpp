@@ -806,8 +806,8 @@ void MetaSnp::computeHanEskin(double lambdaMeanEffect, double lambdaHeterogeneit
 
 	// Compute asymptotic p-value
 	pvalueHanEskinAsymptotic_ =
-		0.5 * 1-boost::math::gamma_p<double, double>(1.0/2.0, statisticHanEskin_/2.0)+
-		0.5 * 1-boost::math::gamma_p<double, double>(2.0/2.0, statisticHanEskin_/2.0);
+		0.5 * (1-boost::math::gamma_p<double, double>(1.0/2.0, statisticHanEskin_/2.0))+
+		0.5 * (1-boost::math::gamma_p<double, double>(2.0/2.0, statisticHanEskin_/2.0));
 	
 	// Use table to calculate accurate p-value
 	if (nStudy_ <= TABLE_MAX_NSTUDY) {
@@ -849,7 +849,6 @@ void MetaSnp::computeHanEskin(double lambdaMeanEffect, double lambdaHeterogeneit
 				ratioAtIndexBottom + (ratioAtIndexTop - ratioAtIndexBottom) *
 				(statisticHanEskin_ - nearestIndexBottom / 10.0) / 0.1;
 			pvalueHanEskinTabulated_ = ratioInterpolated * pvalueHanEskinAsymptotic_;
-
 		}
 		else {
 			int    rowNumber = nStudy_ - 2;

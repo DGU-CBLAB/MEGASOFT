@@ -341,6 +341,7 @@ void doMetaAnalysis() {
 	// Print headings
 	MetaSnp::printHeadings(outFile);
 
+	// Thread
 	try {
 		std::ifstream inStream(inputFile_);
 		std::string readLine;
@@ -361,7 +362,7 @@ void doMetaAnalysis() {
 						tr_vec.at(k).join();
 						tr_vec.erase(tr_vec.begin() + k);
 						b = true;
-						cout << "Count : " << ++count << endl;
+						cout << "Current Progress : " << ++count << " finished." << "\r";
 						break;
 					}
 				}
