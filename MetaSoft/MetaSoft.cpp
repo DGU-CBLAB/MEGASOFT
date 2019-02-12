@@ -4,6 +4,7 @@
 using namespace std;
 namespace po = boost::program_options;
 
+// Multi-Thread variables
 static int threadNum_ = 1;
 static std::mutex mtx;
 // Arguments and default values

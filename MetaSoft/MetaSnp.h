@@ -122,17 +122,16 @@ public:
 
 public:
 	// Class-variable part for
-   // P-value Table of Han Eskin Statistic.
-   // Currently, table dimension is fixed as follows.
-   // nStudy (rows) from 2 to 50 (toal 49 rows)
-   // statistic thresholds (columns) from 0.0 to 33.0 (total 331 columns)
+	// P-value Table of Han Eskin Statistic.
+	// Currently, table dimension is fixed as follows.
+	// nStudy (rows) from 2 to 50 (toal 49 rows)
+	// statistic thresholds (columns) from 0.0 to 33.0 (total 331 columns)
 	static const int TABLE_NROW = 49;
 	static const int TABLE_MAX_NSTUDY = 50;
 	static const int TABLE_NCOLUMN = 331;
 	static double TABLE_MAX_THRESHOLD;
 	static double** pvalueTable_;
-	//	new double[TABLE_NROW][TABLE_NCOLUMN];
-	static bool isPvalueTableRead_;
+	static bool isPvalueTableRead_; // TABLE_NROW x TABLE_NCOLUMN
 
 public:
 	static void readPvalueTableFile(std::string pvalueTableFile);

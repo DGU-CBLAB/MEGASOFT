@@ -3,6 +3,7 @@ using namespace std;
 
 
 /*
+	Functional Replacement
 	java : Probability.chiSquareComplemented(v, x)
 	c++ : 1 - boost::math::gamma_p<double,double>(v/2.0, x/2.0)
 */
@@ -10,6 +11,8 @@ using namespace std;
 	https://stackoverflow.com/questions/13042561/fatal-error-lnk1104-cannot-open-file-libboost-system-vc110-mt-gd-1-51-lib
 	boost LNK problem solved
 */
+
+// purpose : thread result comparison
 bool map_comp(const map_tuple& a, const map_tuple& b) {
 	return a.key < b.key;
 }
@@ -49,11 +52,6 @@ MetaSnp::MetaSnp(std::string rsid) {
 	isNa_ = std::vector<bool>();
 	hvalues_ = std::vector<double>();
 	mvalues_ = std::vector<double>();
-	//srand(time(NULL));
-
-	// for In-class Initializer problem
-	//TABLE_MAX_THRESHOLD = 33.0;
-	//pvalueTable_ = (double**)malloc(sizeof(double*)*TABLE_NROW);
 }
 
 void MetaSnp::addStudy(double beta, double standardError) {
@@ -976,7 +974,6 @@ void MetaSnp::printHeadings(FILE* outFile) {
 }
 
 void MetaSnp::printResults(FILE* f) {
-	//FILE* f = fopen(dir.c_str(), "w");
 	fprintf(f,"%s\t", rsid_);
 	fprintf(f,"%d\t", nStudy_);
 	if (isFixedEffectsComputed_) {
@@ -1030,7 +1027,6 @@ void MetaSnp::printResults(FILE* f) {
 		}
 	}
 	fprintf(f, "\n");
-	//fclose(f);
 }
 
 void MetaSnp::readPvalueTableFile(std::string pvalueTableFile) {
