@@ -56,7 +56,8 @@ void handleArguments(int argc, char* argv[]) {
 		("lambda_hetero", po::value<double>(), "(Random Effects) User-specified lambda for heterogeneity part (default=1.0)")
 		("mvalue", po::bool_switch()->default_value(false), "Compute m-value(default=false)")
 		("mvalue_prior_sigma", po::value<double>(), "Sigma value for normal prior N(0, sigma^2) for effect (default=0.2)")
-		("mvalue_prior_beta", po::value<std::string>(), "Alpha and Beta value for Beta dist prior Betadist(alpha,beta) for existence of effect (default=1.0,1.0)")
+		("mvalue_prior_alpha", po::value<std::string>(), "Alpha value for Beta dist prior Betadist(alpha,beta) for existence of effect (default=1.0,1.0)")
+		("mvalue_prior_beta", po::value<std::string>(), "Beta value for Beta dist prior Betadist(alpha,beta) for existence of effect (default=1.0,1.0)")
 		("mvalue_p_thres", po::value<double>(), "Compute m-values only for SNPs whose FE or RE2 p-value is below this threshold (default=1E-7)")
 		("mvalue_method", po::value<std::string>(), "Which method to use to calculate m-value between 'exact' and 'mcmc' (default=exact)")
 		("mcmc_sample", po::value<long>(), "(MCMC) Number of samples (default=10,000)")
@@ -104,8 +105,10 @@ void handleArguments(int argc, char* argv[]) {
 		if (vm.count("mvalue_prior_sigma")) {
 			priorSigma_ = vm["mvalue_prior_sigma"].as<double>();
 		}
+		if (vm.count("mvalue_prior_alpha")) {
+			priorAlpha_ = stod(vm["mvalue_prior_alpha"].as<std::string>());
+		}
 		if (vm.count("mvalue_prior_beta")) {
-			priorAlpha_ = stod(vm["mvalue_prior_beta"].as<std::string>());
 			priorBeta_ = stod(vm["mvalue_prior_beta"].as<std::string>());
 		}
 		if (vm.count("mvalue_p_thres")) {

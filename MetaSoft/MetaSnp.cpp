@@ -288,7 +288,7 @@ void MetaSnp::computeMvalues(double priorAlpha, double priorBeta, double priorSi
 
 void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double priorSigma, long sample, long burnin, double probRandom, double maxNumFlipArg, int seed) {
 	int maxNumFlip = 1;
-	
+
 	if (maxNumFlipArg < 1.0) {
 		maxNumFlip = (int)floor(maxNumFlipArg * nStudy_);
 		if (maxNumFlip < 1) {
@@ -313,13 +313,8 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 	double* logPriorConfig = (double*)malloc(sizeof(double)*(nStudy_ + 1)); // Prob of each configuration with respect to # of studies with effect
 
 	for (int i = 0; i <= nStudy_; i++) {
-		logPriorConfig[i] = log(boost::math::beta<double,double>(i + priorAlpha, nStudy_ - 1 + priorBeta))
+		logPriorConfig[i] = log(boost::math::beta<double,double>(i + priorAlpha, nStudy_ - i + priorBeta))
 			- log(boost::math::beta<double,double>(priorAlpha, priorBeta));
-		cout << priorAlpha << "\t" << priorBeta << endl;
-		cout << logPriorConfig[i] << "\t" << log(boost::math::beta<double, double>(i + priorAlpha, nStudy_ - 1 + priorBeta)) << "\t" <<
-			log(boost::math::beta<double, double>(priorAlpha, priorBeta)) << endl;
-		cout << logPriorConfig[i] << "\t" << boost::math::beta<double, double>(i + priorAlpha, nStudy_ - 1 + priorBeta) << "\t" <<
-			boost::math::beta<double, double>(priorAlpha, priorBeta) << endl <<endl;
 	}
 
 	int* accumCntH0 = (int*)malloc(sizeof(int)*nStudy_); // Accumullate count for each study
@@ -333,7 +328,11 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 	// Start from a random configuration
 	int numH1 = 0;
 	for (int i = 0; i < nStudy_; i++) {
-		H1[i] = (int)(rand() % 2); // Range 0~1
+		if (rand() % 2 == 1) {
+			H1[i] = true;
+		}
+		else H1[i] = false;
+
 		if (H1[i]) numH1++;
 	}
 
@@ -389,7 +388,11 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 			// Randomization move
 			int tmpNumH1 = 0;
 			for (int i = 0; i < nStudy_; i++) {
-				tmp[i] = rand() % 2;
+				if (rand() % 2 == 1) {
+					tmp[i] = true;
+				}
+				else tmp[i] = false;
+
 				if (tmp[i]) tmpNumH1++;
 			}
 
@@ -417,9 +420,7 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 		else {
 			for (int i = 0; i < nStudy_; i++) {
 				if (H1[i]) {
-					//cout << accumCntH0[i] << "\t";
 					accumCntH1[i]+=1;
-					//cout << accumCntH0[i] << endl;
 				}
 				else {
 					accumCntH0[i]+=1;
@@ -430,7 +431,7 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 	}// end of while
 
 	for (int i = 0; i < nStudy_; i++) {
-		/*cout << accumCntH0[i] << "\t" << accumCntH1[i] << endl;*/
+		//cout << accumCntH0[i] << "\t" << accumCntH1[i] << endl;
 		double mvalue = (double)accumCntH1[i] / (accumCntH0[i] + accumCntH1[i]);
 		mvalues_.push_back(mvalue);
 	}
