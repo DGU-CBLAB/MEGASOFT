@@ -202,8 +202,8 @@ void MetaSnp::computeMvalues(double priorAlpha, double priorBeta, double priorSi
 	double* priorConfig = (double*)malloc(sizeof(double)*(nStudy_ + 1));	// Prob of each configuration with respect to # of studies with effect
 
 	for (int i = 0; i <= nStudy_; i++) {
-		priorConfig[i] = exp(boost::math::beta<double,double>(i + priorAlpha, nStudy_ - i + priorBeta))
-							/ exp(boost::math::beta<double,double>(priorAlpha, priorBeta));
+		priorConfig[i] = exp(log(boost::math::beta<double,double>(i + priorAlpha, nStudy_ - i + priorBeta)))
+							/ exp(log(boost::math::beta<double,double>(priorAlpha, priorBeta)));
 	}
 
 	double* accumProbH0 = (double*)malloc(sizeof(double)*nStudy_);	// Accumulate probability for each study
@@ -313,8 +313,13 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 	double* logPriorConfig = (double*)malloc(sizeof(double)*(nStudy_ + 1)); // Prob of each configuration with respect to # of studies with effect
 
 	for (int i = 0; i <= nStudy_; i++) {
-		logPriorConfig[i] = boost::math::beta<double,double>(i + priorAlpha, nStudy_ - 1 + priorBeta)
-			- boost::math::beta<double,double>(priorAlpha, priorBeta);
+		logPriorConfig[i] = log(boost::math::beta<double,double>(i + priorAlpha, nStudy_ - 1 + priorBeta))
+			- log(boost::math::beta<double,double>(priorAlpha, priorBeta));
+		cout << priorAlpha << "\t" << priorBeta << endl;
+		cout << logPriorConfig[i] << "\t" << log(boost::math::beta<double, double>(i + priorAlpha, nStudy_ - 1 + priorBeta)) << "\t" <<
+			log(boost::math::beta<double, double>(priorAlpha, priorBeta)) << endl;
+		cout << logPriorConfig[i] << "\t" << boost::math::beta<double, double>(i + priorAlpha, nStudy_ - 1 + priorBeta) << "\t" <<
+			boost::math::beta<double, double>(priorAlpha, priorBeta) << endl <<endl;
 	}
 
 	int* accumCntH0 = (int*)malloc(sizeof(int)*nStudy_); // Accumullate count for each study
@@ -412,10 +417,12 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 		else {
 			for (int i = 0; i < nStudy_; i++) {
 				if (H1[i]) {
-					accumCntH1[i]++;
+					//cout << accumCntH0[i] << "\t";
+					accumCntH1[i]+=1;
+					//cout << accumCntH0[i] << endl;
 				}
 				else {
-					accumCntH0[i]++;
+					accumCntH0[i]+=1;
 				}
 			}
 			chainCount++;
@@ -423,6 +430,7 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 	}// end of while
 
 	for (int i = 0; i < nStudy_; i++) {
+		/*cout << accumCntH0[i] << "\t" << accumCntH1[i] << endl;*/
 		double mvalue = (double)accumCntH1[i] / (accumCntH0[i] + accumCntH1[i]);
 		mvalues_.push_back(mvalue);
 	}
@@ -833,14 +841,14 @@ void MetaSnp::computeHanEskin(double lambdaMeanEffect, double lambdaHeterogeneit
 				exit(-1);
 			}
 			double asymptoticPvalueAtIndexBottom =
-				0.5 * 1-boost::math::gamma_p<double, double>(1.0/2.0, (nearestIndexBottom / 10.0)/2.0) +
-				0.5 * 1-boost::math::gamma_p<double, double>(2.0/2.0, (nearestIndexBottom / 10.0)/2.0);
+				0.5 * (1-boost::math::gamma_p<double, double>(1.0/2.0, (nearestIndexBottom / 10.0)/2.0)) +
+				0.5 * (1-boost::math::gamma_p<double, double>(2.0/2.0, (nearestIndexBottom / 10.0)/2.0));
 			double ratioAtIndexBottom = tablePvalueAtIndexBottom /
 				asymptoticPvalueAtIndexBottom;
 			double tablePvalueAtIndexTop = pvalueTable_[rowNumber][nearestIndexTop];
 			double asymptoticPvalueAtIndexTop =
-				0.5 * 1-boost::math::gamma_p<double, double>(1.0/2.0, (nearestIndexTop / 10.0)/2.0) +
-				0.5 * 1-boost::math::gamma_p<double, double>(2.0/2.0, (nearestIndexTop / 10.0)/2.0);
+				0.5 * (1-boost::math::gamma_p<double, double>(1.0/2.0, (nearestIndexTop / 10.0)/2.0)) +
+				0.5 * (1-boost::math::gamma_p<double, double>(2.0/2.0, (nearestIndexTop / 10.0)/2.0));
 			double ratioAtIndexTop = tablePvalueAtIndexTop /
 				asymptoticPvalueAtIndexTop;
 			double ratioInterpolated =
@@ -852,8 +860,8 @@ void MetaSnp::computeHanEskin(double lambdaMeanEffect, double lambdaHeterogeneit
 			int    rowNumber = nStudy_ - 2;
 			double tablePvalueAtTheEnd = pvalueTable_[rowNumber][TABLE_NCOLUMN - 1];
 			double asymptoticPvalueAtTheEnd =
-				0.5 * 1-boost::math::gamma_p<double, double>(1.0/2.0, TABLE_MAX_THRESHOLD/2.0) +
-				0.5 * 1-boost::math::gamma_p<double, double>(2.0/2.0, TABLE_MAX_THRESHOLD/2.0);
+				0.5 * (1-boost::math::gamma_p<double, double>(1.0/2.0, TABLE_MAX_THRESHOLD/2.0)) +
+				0.5 * (1-boost::math::gamma_p<double, double>(2.0/2.0, TABLE_MAX_THRESHOLD/2.0));
 			double ratioAtTheEnd = tablePvalueAtTheEnd /
 				asymptoticPvalueAtTheEnd;
 			pvalueHanEskinTabulated_ = ratioAtTheEnd * pvalueHanEskinAsymptotic_;

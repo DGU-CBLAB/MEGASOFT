@@ -397,7 +397,6 @@ void doMetaAnalysis() {
 		std::vector<map_tuple> total;
 
 		while (std::getline(Instream, readLine)) {
-			cout << readLine.substr(0, readLine.find('\t')) << endl;
 			map_tuple mt(stoi(readLine.substr(0, readLine.find('\t'))), readLine);
 			total.push_back(mt);
 		}
@@ -406,7 +405,6 @@ void doMetaAnalysis() {
 		Instream.close();
 		FILE* outfile = fopen(outputFile_.c_str(), "w");
 		MetaSnp::printHeadings(outfile);
-		cout << total.size() << endl;
 		for (int i = 0; i < total.size(); i++) {
 			fprintf(outfile, "%s\n", total.at(i).val.c_str());
 		}
