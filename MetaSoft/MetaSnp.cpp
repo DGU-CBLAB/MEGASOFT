@@ -1,6 +1,4 @@
 #include"MetaSnp.h"
-using namespace std;
-
 
 /*
 	Functional Replacement
@@ -16,7 +14,7 @@ using namespace std;
 bool map_comp(const map_tuple& a, const map_tuple& b) {
 	return a.key < b.key;
 }
-void split(vector<string>& tokens, const string& str, const string& delim)
+void split(std::vector<std::string>& tokens, const std::string& str, const std::string& delim)
 {
 	size_t prev = 0, pos = 0;
 	tokens.clear();
@@ -25,9 +23,9 @@ void split(vector<string>& tokens, const string& str, const string& delim)
 		if (str.find("\t", prev) < pos) {
 			pos = str.find("\t", prev);
 		}
-		if (pos == string::npos) 
+		if (pos == std::string::npos)
 			pos = str.length();
-		string token = str.substr(prev, pos - prev);
+		std::string token = str.substr(prev, pos - prev);
 		
 		if (!token.empty()) {
 			tokens.push_back(token);
@@ -298,10 +296,10 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 	else {
 		maxNumFlip = (int)floor(maxNumFlipArg);
 	}
-
+	
 	mvalues_.clear();
 	double priorVar = priorSigma * priorSigma;
-	// Random srand is set from the constructor
+	srand(time(NULL));
 	double* betas = (double*)malloc(sizeof(double)*nStudy_);
 	double* ts = (double*)malloc(sizeof(double)*nStudy_); // Precision
 
@@ -335,7 +333,7 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 
 		if (H1[i]) numH1++;
 	}
-
+	
 	long burninCount = burnin;
 	long chainCount = 0;
 	bool* tmp = (bool*)malloc(sizeof(bool)*nStudy_);
@@ -348,7 +346,7 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 	// Chain
 	while (chainCount < sample) {
 		double currentLogProb = observationLogLikelihood(betas,nStudy_, ts, H1, numH1, priorVar) + logPriorConfig[numH1];
-
+		
 		if (rand() / (double)RAND_MAX > probRandom) {
 			// Usual jump
 			int numFlip = rand()%maxNumFlip + 1;
@@ -392,7 +390,7 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 					tmp[i] = true;
 				}
 				else tmp[i] = false;
-
+			
 				if (tmp[i]) tmpNumH1++;
 			}
 
@@ -833,7 +831,7 @@ void MetaSnp::computeHanEskin(double lambdaMeanEffect, double lambdaHeterogeneit
 			try {
 				tablePvalueAtIndexBottom = pvalueTable_[rowNumber][nearestIndexBottom];
 			}
-			catch (exception e) {
+			catch (std::exception e) {
 				printf("%f %f %f %f\n", 
 					statisticHanEskinMeanEffectPart_,
 					statisticHanEskinHeterogeneityPart_,
@@ -1047,7 +1045,7 @@ void MetaSnp::readPvalueTableFile(std::string pvalueTableFile) {
 	try {
 		infile = std::ifstream(pvalueTableFile);
 	}
-	catch (exception e) {
+	catch (std::exception e) {
 		std::cout << "ERROR: P-value Table file Error" << std::endl;
 		exit(-1);
 	}
@@ -1071,7 +1069,7 @@ void MetaSnp::readPvalueTableFile(std::string pvalueTableFile) {
 				try {
 					pvalueTable_[i][j] = std::stod(tokens.at(j+1));
 				}
-				catch (exception e) {
+				catch (std::exception e) {
 					std::cout << "Incorrect float value in Pvalue Table file."<<std::endl;
 					exit(-1);
 				}
@@ -1079,7 +1077,7 @@ void MetaSnp::readPvalueTableFile(std::string pvalueTableFile) {
 			tokens.clear();
 		} // end of for(i)
 	}
-	catch (exception e) {
+	catch (std::exception e) {
 		std::cout << "ERROR: error encountered while reading Pvalue Table file" << std::endl;
 		exit(-1);
 	}

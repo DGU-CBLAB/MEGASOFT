@@ -24,7 +24,6 @@
 #define NORMAL_EXECUTION 1
 #define ABNORMAL_EXECUTION -1
 
-using namespace std;
 class map_tuple {
 public:
 	int key;
@@ -35,7 +34,7 @@ public:
 	}
 };
 bool map_comp(const map_tuple& a, const map_tuple& b);
-void split(vector<string>& vec,const string& str, const string& delim);
+void split(std::vector<std::string>& tokens, const std::string& str, const std::string& delim);
 
 class MetaSnp {
 private:
@@ -68,11 +67,11 @@ private:
 	bool isHanEskinComputed_ = false;
 	bool isBinaryEffectsStatisticComputed_ = false;
 	bool isBinaryEffectsPvalueComputed_ = false;
-	vector<double>  betas_;
-	vector<double>  standardErrors_;
-	vector<bool> isNa_;
-	vector<double>  hvalues_;
-	vector<double>  mvalues_;
+	std::vector<double>  betas_;
+	std::vector<double>  standardErrors_;
+	std::vector<bool> isNa_;
+	std::vector<double>  hvalues_;
+	std::vector<double>  mvalues_;
 	static double ML_ESTIMATE_CHANGE_RATIO_THRESHOLD;
 	static double LOG_SQRT2PI;
 public:

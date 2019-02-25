@@ -1,7 +1,7 @@
 #include"MetaSnp.h";
 #include <ctime>
 #include<boost/program_options.hpp>
-using namespace std;
+
 namespace po = boost::program_options;
 
 // Multi-Thread variables
@@ -35,8 +35,8 @@ static int    numSnps_;
 static int    maxNumStudy_;
 static double outputLambdaMeanEffect_;
 static double outputLambdaHeterogeneity_;
-static vector<double> meanEffectParts_;
-static vector<double> heterogeneityParts_;
+static std::vector<double> meanEffectParts_;
+static std::vector<double> heterogeneityParts_;
 static std::string argsSummary_;
 
 const double expectedMedianHanEskinHeterogeneityPart_[] = // from nStudy 2 to 50
@@ -78,7 +78,7 @@ void handleArguments(int argc, char* argv[]) {
 	
 
 	if (vm.count("help")) {
-		cout << desc << endl;
+		std::cout << desc << std::endl;
 		std::exit(1);
 	}
 	if (vm.count("input")) {
@@ -154,16 +154,16 @@ void handleArguments(int argc, char* argv[]) {
 		threadNum_ = vm["thread"].as<int>();
 	}
 	if (vm.count("help")) {
-		std::cout << "------------------------------------------------"<<endl;
-		std::cout << "The format of input_file:" << endl;
-		std::cout << "  Each row is each SNP." << endl;
-		std::cout << "  1st column is RSID." << endl;
-		std::cout << "  2nd and 3rd column are beta and its standard error for 1st study." << endl;
-		std::cout << "  4th and 5th column are beta and its standard error for 2nd study." << endl;
-		std::cout << "  6th and 7th column are beta and its standard error for 3rd study." << endl;
-		std::cout << "  and so on..." << endl;
-		std::cout << "------------------------------------------------" << endl;
-		std::cout << endl;
+		std::cout << "------------------------------------------------"<< std::endl;
+		std::cout << "The format of input_file:" << std::endl;
+		std::cout << "  Each row is each SNP." << std::endl;
+		std::cout << "  1st column is RSID." << std::endl;
+		std::cout << "  2nd and 3rd column are beta and its standard error for 1st study." << std::endl;
+		std::cout << "  4th and 5th column are beta and its standard error for 2nd study." << std::endl;
+		std::cout << "  6th and 7th column are beta and its standard error for 3rd study." << std::endl;
+		std::cout << "  and so on..." << std::endl;
+		std::cout << "------------------------------------------------" << std::endl;
+		std::cout << std::endl;
 		std::exit(-1);
 	}
 
@@ -231,7 +231,7 @@ void printErrorAndQuit(std::string msg) {
 }
 void thr_func(std::string readLine, FILE* outFile) {
 	MetaSnp* metaSnp;    // Store only 1 Snp at a time in memory.
-	vector<std::string> tokens;
+	std::vector<std::string> tokens;
 	split(tokens, readLine, " ");
 	if (tokens.size() > 1) {             // only if non-empty
 		if (tokens.at(0).at(0) != '#') { // only if non-comment
@@ -264,7 +264,7 @@ void thr_func(std::string readLine, FILE* outFile) {
 						}
 						metaSnp->addStudy(beta, standardError);
 					}
-					catch (exception es) {
+					catch (std::exception es) {
 						printf("Incorrect float value in following line. Possibly not a double");
 						printf("%s", readLine.c_str());
 						std::exit(-1);
@@ -307,7 +307,7 @@ void thr_func(std::string readLine, FILE* outFile) {
 								rand());
 						}
 						else {
-							std::cout << mvalueMethod_ << endl;
+							std::cout << mvalueMethod_ << std::endl;
 							assert(false);
 						}
 					}
@@ -322,7 +322,6 @@ void thr_func(std::string readLine, FILE* outFile) {
 	tokens.clear();
 }
 void doMetaAnalysis() {
-	srand(time(NULL));
 	numSnps_ = 0;
 	maxNumStudy_ = 0;
 	meanEffectParts_ = std::vector<double>();
@@ -331,14 +330,14 @@ void doMetaAnalysis() {
 	try {
 		inFile = fopen(inputFile_.c_str(), "r");
 	}
-	catch (exception e) {
+	catch (std::exception e) {
 		printErrorAndQuit("ERROR: Input file cannot be opened");
 		exit(-1);
 	}
 	try {
 		outFile = fopen(outputFile_.c_str(), "w");
 	}
-	catch (exception e) {
+	catch (std::exception e) {
 		printErrorAndQuit("ERROR: Ouput file cannot be opened");
 		exit(-1);
 	}
@@ -366,7 +365,7 @@ void doMetaAnalysis() {
 						tr_vec.at(k).join();
 						tr_vec.erase(tr_vec.begin() + k);
 						b = true;
-						cout << "Current Progress : " << ++count << " finished." << "\r";
+						std::cout << "Current Progress : " << ++count << " finished." << "\r";
 						break;
 					}
 				}
@@ -376,7 +375,7 @@ void doMetaAnalysis() {
 			tr_vec.at(i).join();
 		}
 	}
-	catch (exception e) {
+	catch (std::exception e) {
 		printf("ERROR: error encountered while reading input file");
 		std::exit(-1);
 	}
@@ -384,7 +383,7 @@ void doMetaAnalysis() {
 		fclose(inFile);
 		fclose(outFile);
 	}
-	catch (exception e) {
+	catch (std::exception e) {
 		printf("ERROR: file cannot be closed");
 		std::exit(-1);
 	}
@@ -414,7 +413,7 @@ void doMetaAnalysis() {
 		
 		fclose(outfile);
 	}
-	catch (exception e) {
+	catch (std::exception e) {
 		printf("ERROR: Posterior.txt file has been altered!");
 		std::exit(-1);
 	}
@@ -459,7 +458,7 @@ void printLog() {
 		fprintf(outFile,"Newly calculated inflation factor lambda for heterogeneity part: %f\n", outputLambdaHeterogeneity_);
 		fclose(outFile);
 	}
-	catch (exception e) {
+	catch (std::exception e) {
 		printf("ERROR: error encountered while writing in log file");
 		std::exit(-1);
 	}
@@ -473,9 +472,9 @@ int main(int argc, char* argv[]) {
 	MetaSnp::readPvalueTableFile(pvalueTableFile_);
 	std::cout<<"----- Performing meta-analysis\n";
 	doMetaAnalysis();
-	cout << "---- Performing lambda compute\n";
+	std::cout << "---- Performing lambda compute\n";
 	computeLambda();
-	cout << "---- print Log\n";
+	std::cout << "---- print Log\n";
 	printLog();
 	std::cout<<"----- Finished\n";
 	time_t endTime = time(NULL);
