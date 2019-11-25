@@ -1,5 +1,5 @@
 #include"MetaSnp.h"
-
+#define __STDCPP_WANT_MATH_SPEC_FUNCS__ 1 
 /*
 	Functional Replacement
 	java : Probability.chiSquareComplemented(v, x)
@@ -9,7 +9,17 @@
 	https://stackoverflow.com/questions/13042561/fatal-error-lnk1104-cannot-open-file-libboost-system-vc110-mt-gd-1-51-lib
 	boost LNK problem solved
 */
-
+#define POSINF INFINITY
+#define NEGINF -INFINITY
+double MetaSnp::logBeta(double m, double n) {
+	return log(std::beta(m,n));
+	//return log(boost::math::tgamma(m) * boost::math::tgamma(n) / boost::math::tgamma(m + n));
+}
+double MetaSnp::chiSquareComplemented(double v, double x) {
+	//boost::math::chi_squared dist(v);
+	//return boost::math::cdf(dist, x)/2;
+	return (1 - boost::math::gamma_p<double, double>(v / 2.0, x / 2.0));
+}
 // purpose : thread result comparison
 bool map_comp(const map_tuple& a, const map_tuple& b) {
 	return a.key < b.key;
@@ -44,12 +54,12 @@ double MetaSnp::TABLE_MAX_THRESHOLD = 33.0;
 double** MetaSnp::pvalueTable_;
 bool MetaSnp::isPvalueTableRead_ = false;
 MetaSnp::MetaSnp(std::string rsid) {
-	rsid_ = rsid;
-	betas_ = std::vector<double>();
+	rsid_			= rsid;
+	betas_			= std::vector<double>();
 	standardErrors_ = std::vector<double>();
-	isNa_ = std::vector<bool>();
-	hvalues_ = std::vector<double>();
-	mvalues_ = std::vector<double>();
+	isNa_			= std::vector<bool>();
+	hvalues_		= std::vector<double>();
+	mvalues_		= std::vector<double>();
 }
 
 void MetaSnp::addStudy(double beta, double standardError) {
@@ -66,9 +76,9 @@ void MetaSnp::addNaStudy() {
 }
 
 void MetaSnp::computeFixedEffects(double lambdaMeanEffect) {
-	double* betas = (double*)malloc(sizeof(double)*nStudy_);
-	double* variances = (double*)malloc(sizeof(double)*nStudy_);
-	double* weights = (double*)malloc(sizeof(double)*nStudy_);
+	double* betas		= (double*)malloc(sizeof(double)*nStudy_);
+	double* variances	= (double*)malloc(sizeof(double)*nStudy_);
+	double* weights		= (double*)malloc(sizeof(double)*nStudy_);
 
 	for (int i = 0; i < nStudy_; i++) {
 		betas[i] = betas_.at(i);
@@ -76,20 +86,20 @@ void MetaSnp::computeFixedEffects(double lambdaMeanEffect) {
 		weights[i] = 1.0 / variances[i];
 	}
 
-	double sumBetaProdWeight = 0.0;
-	double sumWeight = 0.0;
+	double sumBetaProdWeight	= 0.0;
+	double sumWeight			= 0.0;
 
 	for (int i = 0; i < nStudy_; i++) {
-		sumBetaProdWeight += betas[i] * weights[i];
-		sumWeight += weights[i];
+		sumBetaProdWeight	+= betas[i] * weights[i];
+		sumWeight			+= weights[i];
 	}
 
-	betaFixedEffects_ = sumBetaProdWeight / sumWeight;
-	standardErrorFixedEffects_ = 1.0 / sqrt(sumWeight);
-	statisticFixedEffects_ = sumBetaProdWeight / sqrt(sumWeight);
-	statisticFixedEffects_ /= sqrt(lambdaMeanEffect);
-	pvalueFixedEffects_ = 1 - boost::math::gamma_p<double, double>(1.0/2.0, pow(statisticFixedEffects_, 2.0)/2.0);
-	isFixedEffectsComputed_ = true;
+	betaFixedEffects_			= sumBetaProdWeight / sumWeight;
+	standardErrorFixedEffects_	= 1.0				/ sqrt(sumWeight);
+	statisticFixedEffects_		= sumBetaProdWeight / sqrt(sumWeight);
+	statisticFixedEffects_		/= sqrt(lambdaMeanEffect);
+	pvalueFixedEffects_			= chiSquareComplemented(1.0, pow(statisticFixedEffects_,2.0));//boost::math::gamma_p<double, double>(1.0 / 2.0, pow(statisticFixedEffects_, 2.0) / 2.0)/pow(2,1.0/2.0);//1 - boost::math::gamma_p<double, double>(1.0/2.0, pow(statisticFixedEffects_, 2.0)/2.0);
+	isFixedEffectsComputed_		= true;
 	
 	free(betas);
 	free(variances);
@@ -101,24 +111,24 @@ void MetaSnp::computeFixedEffects() {
 }
 
 void MetaSnp::computeHeterogeneity() {
-	double* betas = (double*)malloc(sizeof(double)*nStudy_);
-	double* variances = (double*)malloc(sizeof(double)*nStudy_);
-	double* weights = (double*)malloc(sizeof(double)*nStudy_);
+	double* betas		= (double*)malloc(sizeof(double)*nStudy_);
+	double* variances	= (double*)malloc(sizeof(double)*nStudy_);
+	double* weights		= (double*)malloc(sizeof(double)*nStudy_);
 
 	for (int i = 0; i < nStudy_; i++) {
-		betas[i] = betas_.at(i);
-		variances[i] = pow(standardErrors_.at(i), 2.0);
-		weights[i] = 1.0 / variances[i];
+		betas[i]		= betas_.at(i);
+		variances[i]	= pow(standardErrors_.at(i), 2.0);
+		weights[i]		= 1.0 / variances[i];
 	}
 
-	double sumBetaProdWeight = 0.0;
-	double sumWeight = 0.0;
-	double sumWeightSquare = 0.0;
+	double sumBetaProdWeight	= 0.0;
+	double sumWeight			= 0.0;
+	double sumWeightSquare		= 0.0;
 	
 	for (int i = 0; i < nStudy_; i++) {
-		sumBetaProdWeight += betas[i] * weights[i];
-		sumWeight += weights[i];
-		sumWeightSquare += weights[i] * weights[i];
+		sumBetaProdWeight	+= betas[i] * weights[i];
+		sumWeight			+= weights[i];
+		sumWeightSquare		+= weights[i] * weights[i];
 	}
 
 	// Compute Q and ISquare
@@ -128,20 +138,20 @@ void MetaSnp::computeHeterogeneity() {
 		Q += weights[i] * (betas[i] - meanBeta) * (betas[i] - meanBeta);
 	}
 	statisticQ_ = Q;
-	pvalueQ_ = 1-boost::math::gamma_p<double, double>((nStudy_ -1)/2.0, Q/2.0);
+	pvalueQ_	= chiSquareComplemented(nStudy_ - 1.0, Q);//boost::math::gamma_p<double, double>((nStudy_ - 1.0) / 2.0, Q / 2.0) / pow(2, (nStudy_ - 1.0) / 2.0);//1-boost::math::gamma_p<double, double>((nStudy_ -1)/2.0, Q/2.0);
 	// replace java Math.max : finding maximum value of two
-	statisticISquare_ = (Q - (double)(nStudy_ - 1));
+	statisticISquare_ = (Q - (double)(nStudy_ - 1.0))/Q*100.0;
 	if (statisticISquare_ < 0.0) {
 		statisticISquare_ = 0.0;
 	}
 
 	// Compute tauSquare
 	double meanWeight = sumWeight / nStudy_;
-	double Sw2 = (1.0 / (double)(nStudy_ - 1))
-		* (sumWeightSquare - nStudy_ * meanWeight * meanWeight);
-	double U = (double)(nStudy_ - 1)
-		* (meanWeight - Sw2 / (nStudy_ * meanWeight));
-	statisticTauSquare_ = (Q - (double)(nStudy_ - 1)) / U;
+	double Sw2 = (1.0 / (double)(nStudy_ - 1.0))
+				* (sumWeightSquare - nStudy_ * meanWeight * meanWeight);
+	double U = (double)(nStudy_ - 1.0)
+				* (meanWeight - Sw2 / (nStudy_ * meanWeight));
+	statisticTauSquare_ = (Q - (double)(nStudy_ - 1.0)) / U;
 	if (statisticTauSquare_ < 0.0) {
 		statisticTauSquare_ = 0.0;
 	}
@@ -161,24 +171,24 @@ void MetaSnp::computeRandomEffects() {
 	double* weights = (double*)malloc(sizeof(double)*nStudy_);
 
 	for (int i = 0; i < nStudy_; i++) {
-		betas[i] = betas_.at(i);
-		variances[i] = pow(standardErrors_.at(i), 2.0);
-		weights[i] = 1.0 / variances[i];
+		betas[i]		= betas_.at(i);
+		variances[i]	= pow(standardErrors_.at(i), 2.0);
+		weights[i]		= 1.0 / variances[i];
 	}
 
 	double sumBetaProbWeightWithTau = 0.0;
 	double sumWeightWithTau = 0.0;
 	
 	for (int i = 0; i < nStudy_; i++) {
-		sumBetaProbWeightWithTau += betas[i] / (variances[i] + statisticTauSquare_);
-		sumWeightWithTau += 1.0 / (variances[i] + statisticTauSquare_);
+		sumBetaProbWeightWithTau	+= betas[i] / (variances[i] + statisticTauSquare_);
+		sumWeightWithTau			+=		1.0 / (variances[i] + statisticTauSquare_);
 	}
 
-	betaRandomEffects_ = sumBetaProbWeightWithTau / sumWeightWithTau;
-	standardErrorRandomEffects_ = 1.0 / sqrt(sumWeightWithTau);
-	statisticRandomEffects_ = sumBetaProbWeightWithTau / sqrt(sumWeightWithTau);
-	pvalueRandomEffects_ = 1-boost::math::gamma_p<double, double>(1.0/2.0 , pow(statisticRandomEffects_, 2.0)/2.0);
-	isRandomEffectsComputed_ = true;
+	betaRandomEffects_			= sumBetaProbWeightWithTau	/ sumWeightWithTau;
+	standardErrorRandomEffects_ = 1.0						/ sqrt(sumWeightWithTau);
+	statisticRandomEffects_		= sumBetaProbWeightWithTau	/ sqrt(sumWeightWithTau);
+	pvalueRandomEffects_		= chiSquareComplemented(1.0, pow(statisticRandomEffects_, 2.0));// 1-boost::math::gamma_p<double, double>(1.0/2.0 , pow(statisticRandomEffects_, 2.0)/2.0);
+	isRandomEffectsComputed_	= true;
 
 	free(betas);
 	free(variances);
@@ -200,8 +210,10 @@ void MetaSnp::computeMvalues(double priorAlpha, double priorBeta, double priorSi
 	double* priorConfig = (double*)malloc(sizeof(double)*(nStudy_ + 1));	// Prob of each configuration with respect to # of studies with effect
 
 	for (int i = 0; i <= nStudy_; i++) {
-		priorConfig[i] = exp(log(boost::math::beta<double,double>(i + priorAlpha, nStudy_ - i + priorBeta)))
-							/ exp(log(boost::math::beta<double,double>(priorAlpha, priorBeta)));
+		priorConfig[i] = exp(logBeta(i + priorAlpha, nStudy_ - i + priorBeta))
+			/ exp(logBeta(priorAlpha, priorBeta));
+							//exp(log(boost::math::beta<double,double>(i + priorAlpha, nStudy_ - i + priorBeta)))
+							/// exp(log(boost::math::beta<double,double>(priorAlpha, priorBeta)));
 	}
 
 	double* accumProbH0 = (double*)malloc(sizeof(double)*nStudy_);	// Accumulate probability for each study
@@ -299,7 +311,7 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 	
 	mvalues_.clear();
 	double priorVar = priorSigma * priorSigma;
-	srand(time(NULL));
+	srand(seed);
 	double* betas = (double*)malloc(sizeof(double)*nStudy_);
 	double* ts = (double*)malloc(sizeof(double)*nStudy_); // Precision
 
@@ -308,11 +320,13 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 		ts[i] = 1.0 / pow(standardErrors_.at(i), 2.0);
 	}
 	bool* H1 = (bool*)malloc(sizeof(bool)*nStudy_); // Array defining configuration
-	double* logPriorConfig = (double*)malloc(sizeof(double)*(nStudy_ + 1)); // Prob of each configuration with respect to # of studies with effect
+	double* logPriorConfig = (double*)malloc(sizeof(double)*(nStudy_ + 1.0)); // Prob of each configuration with respect to # of studies with effect
 
 	for (int i = 0; i <= nStudy_; i++) {
-		logPriorConfig[i] = log(boost::math::beta<double,double>(i + priorAlpha, nStudy_ - i + priorBeta))
-			- log(boost::math::beta<double,double>(priorAlpha, priorBeta));
+		logPriorConfig[i] = logBeta(i + priorAlpha, nStudy_ - i + priorBeta)
+			- logBeta(priorAlpha, priorBeta);
+			//log(boost::math::beta<double,double>(i + priorAlpha, nStudy_ - i + priorBeta))
+			//- log(boost::math::beta<double,double>(priorAlpha, priorBeta));
 	}
 
 	int* accumCntH0 = (int*)malloc(sizeof(int)*nStudy_); // Accumullate count for each study
@@ -345,7 +359,7 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 
 	// Chain
 	while (chainCount < sample) {
-		double currentLogProb = observationLogLikelihood(betas,nStudy_, ts, H1, numH1, priorVar) + logPriorConfig[numH1];
+		double currentLogProb = observationLogLikelihood(betas, ts, H1, numH1, priorVar) + logPriorConfig[numH1];
 		
 		if (rand() / (double)RAND_MAX > probRandom) {
 			// Usual jump
@@ -367,7 +381,7 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 				numH1 += H1[j] ? 1 : -1;
 			}
 
-			double nextLogProb = observationLogLikelihood(betas,nStudy_, ts, H1, numH1, priorVar) + logPriorConfig[numH1];
+			double nextLogProb = observationLogLikelihood(betas, ts, H1, numH1, priorVar) + logPriorConfig[numH1];
 
 			if (nextLogProb > currentLogProb || rand() / (double)RAND_MAX < exp(nextLogProb - currentLogProb)) {
 				//Move
@@ -394,7 +408,7 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 				if (tmp[i]) tmpNumH1++;
 			}
 
-			double nextLogProb = observationLogLikelihood(betas,nStudy_, ts, tmp, tmpNumH1, priorVar) + logPriorConfig[tmpNumH1];
+			double nextLogProb = observationLogLikelihood(betas, ts, tmp, tmpNumH1, priorVar) + logPriorConfig[tmpNumH1];
 
 			if (nextLogProb > currentLogProb || rand() / (double)RAND_MAX < exp(nextLogProb - currentLogProb)) {
 				// Move
@@ -418,10 +432,10 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 		else {
 			for (int i = 0; i < nStudy_; i++) {
 				if (H1[i]) {
-					accumCntH1[i]+=1;
+					accumCntH1[i]++;
 				}
 				else {
-					accumCntH0[i]+=1;
+					accumCntH0[i]++;
 				}
 			}
 			chainCount++;
@@ -445,8 +459,8 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 	free(shuffleBuffer);
 }
 
-double MetaSnp::observationLogLikelihood(double* betas,int betas_n, double* ts, bool* H1, int numH1, double priorVar) {
-	int n = betas_n;
+double MetaSnp::observationLogLikelihood(double* betas, double* ts, bool* H1, int numH1, double priorVar) {
+	int n = nStudy_;
 
 	// First for null points
 	double logProbNullPoints = 0;
@@ -466,19 +480,19 @@ double MetaSnp::observationLogLikelihood(double* betas,int betas_n, double* ts, 
 
 		for (int i = 0; i < n; i++) {
 			if (H1[i]) {
-				sum_t += ts[i];
-				sum_tm += ts[i] * betas[i];
-				sum_tmm += ts[i] * betas[i] * betas[i];
-				sum_logt += log(ts[i]);
+				sum_t		+= ts[i];
+				sum_tm		+= ts[i] * betas[i];
+				sum_tmm		+= ts[i] * betas[i] * betas[i];
+				sum_logt	+= log(ts[i]);
 			}
 		}
-		double betaJoint = sum_tm / sum_t;
-		double tJoint = sum_t;
-		double tconst = 1 / ((1 / tJoint) + priorVar);
-		double logScaleFactor = -(numH1 - 1)*LOG_SQRT2PI + 0.5*sum_logt - 0.5* log(sum_t)
-			- (sum_tmm - sum_tm * sum_tm / sum_t) / 2;
-		double logJointPDF = 0.5 * log(tconst) - LOG_SQRT2PI - tconst * betaJoint * betaJoint / 2;
-		logProbAltPoints = logJointPDF + logScaleFactor;
+		double betaJoint		= sum_tm / sum_t;
+		double tJoint			= sum_t;
+		double tconst			= 1 / ((1 / tJoint) + priorVar);
+		double logScaleFactor	= -(numH1 - 1)*LOG_SQRT2PI + 0.5*sum_logt - 0.5* log(sum_t)
+								- (sum_tmm - sum_tm * sum_tm / sum_t) / 2;
+		double logJointPDF		= 0.5 * log(tconst) - LOG_SQRT2PI - tconst * betaJoint * betaJoint / 2;
+		logProbAltPoints		= logJointPDF + logScaleFactor;
 	}
 	return logProbNullPoints + logProbAltPoints;
 }
@@ -533,8 +547,8 @@ void MetaSnp::computeBinaryEffectsStatistic() {
 	double* zWeights = (double*)malloc(sizeof(double)*nStudy_);
 
 	for (int i = 0; i < nStudy_; i++) {
-		zs[i] = betas_.at(i) / standardErrors_.at(i);
-		zWeights[i] = 1.0 / standardErrors_.at(i);
+		zs[i]		= betas_.at(i)  / standardErrors_.at(i);
+		zWeights[i] = 1.0			/ standardErrors_.at(i);
 	}
 
 	double sumHvalueZweightZ = 0.0F;
@@ -600,9 +614,7 @@ void MetaSnp::computeBinaryEffectsPvalue(long numSampling, int seed) {
 			// permute "a" list
 			for (i = 0; i < n; i++) {
 				j = i + (rand() % (n - i));
-				tmp = a[i];
-				a[i] = a[j];
-				a[j] = tmp;
+				std::swap(a[i], a[j]);
 			}
 			sumwssq = 0.0;
 			for (i = 0; i < m; i++) {
@@ -641,7 +653,7 @@ void MetaSnp::computeBinaryEffectsPvalue(long numSampling, int seed) {
 		}
 
 		for (i = 0; i < n; i++) {
-			if (rand() / (double)RAND_MAX <= (double)m / n) {
+			if ((double)rand() / (double)RAND_MAX <= (double)m / (double)n) {
 				samplezs[i] = samplezs[i] * stds[m] + xs[m];
 			}
 			samplebeta[i] = samplezs[i] / ws[i];
@@ -659,14 +671,15 @@ void MetaSnp::computeBinaryEffectsPvalue(long numSampling, int seed) {
 			for (m = 1; m <= n; m++) {
 				p_situation = pdf_num_alt[m];
 				for (k = 0; k < n; k++) {
-					p_left = ((double)(n - m) / n)*(1. / sqrt(2 * M_PI))*exp(-0.5*samplezs[k] * samplezs[k]);
-					p_right = ((double)m / n)*(1. /sqrt(2 * M_PI*stds[m] * stds[m]))*exp(-0.5*(samplezs[k] - xs[m])*(samplezs[k] - xs[m]) / (stds[m] * stds[m]));
+					p_left		= ((double)(n - (double)m) / n)*(1. / sqrt(2 * M_PI))*exp(-0.5*samplezs[k] * samplezs[k]);
+					p_right		= ((double)m / n)*(1. /sqrt(2 * M_PI*stds[m] * stds[m]))*exp(-0.5*(samplezs[k] - xs[m])*(samplezs[k] - xs[m]) / (stds[m] * stds[m]));
 					p_situation *= p_left + p_right;
 				}
 				p_sample += p_situation;
 			}
 			p_original = 1.0;	// pdf of original distribution
-			for (k = 0; k < n; k++) p_original *= (1. / sqrt(2 * M_PI))*exp(-0.5*samplezs[k] * samplezs[k]);
+			for (k = 0; k < n; k++) 
+				p_original *= (1. / sqrt(2 * M_PI))*exp(-0.5*samplezs[k] * samplezs[k]);
 			ratio = p_original / p_sample;
 			pv += ratio;
 			cnt++;
@@ -720,9 +733,9 @@ void MetaSnp::computeHanEskin(double lambdaMeanEffect, double lambdaHeterogeneit
 	double sumWeight = 0.0;
 	double sumWeightSquare = 0.0;
 	for (int i = 0; i < nStudy_; i++) {
-		sumBetaProdWeight += betas[i] * weights[i];
-		sumWeight += weights[i];
-		sumWeightSquare += weights[i] * weights[i];
+		sumBetaProdWeight	+= betas[i] * weights[i];
+		sumWeight			+= weights[i];
+		sumWeightSquare		+= weights[i] * weights[i];
 	}
 	// Iteratively find maximum likelihood parameters
 	double previousMLBeta;
@@ -731,33 +744,33 @@ void MetaSnp::computeHanEskin(double lambdaMeanEffect, double lambdaHeterogeneit
 	double fixedEffectsMLBeta = sumBetaProdWeight / sumWeight;
 	double nextMLBeta = fixedEffectsMLBeta;  // starting point
 	double nextMLTauSquare = statisticTauSquare_; // starting point
-	double nextLogLikelihood = -INFINITY;//Double.NEGATIVE_INFINITY;
-	double changeRatioMLBeta = INFINITY;
-	double changeRatioMLTauSquare = INFINITY;
-	double changeLogLikelihood = INFINITY;
+	double nextLogLikelihood = NEGINF;//Double.NEGATIVE_INFINITY;
+	double changeRatioMLBeta = POSINF;
+	double changeRatioMLTauSquare = POSINF;
+	double changeLogLikelihood = POSINF;
 	double sumNumerator;
 	double sumDenominator;
 
 	while (changeRatioMLBeta > ML_ESTIMATE_CHANGE_RATIO_THRESHOLD
 		|| changeRatioMLTauSquare > ML_ESTIMATE_CHANGE_RATIO_THRESHOLD) {
-		previousMLBeta = nextMLBeta;
-		previousMLTauSquare = nextMLTauSquare;
-		previousLogLikelihood = nextLogLikelihood;
-		sumNumerator = 0.0;
-		sumDenominator = 0.0;
+		previousMLBeta			= nextMLBeta;
+		previousMLTauSquare		= nextMLTauSquare;
+		previousLogLikelihood	= nextLogLikelihood;
+		sumNumerator			= 0.0;
+		sumDenominator			= 0.0;
 
 		for (int i = 0; i < nStudy_; i++) {
-			sumNumerator += betas[i] / (variances[i] + previousMLTauSquare);
-			sumDenominator += 1.0 / (variances[i] + previousMLTauSquare);
+			sumNumerator	+= betas[i] / (variances[i] + previousMLTauSquare);
+			sumDenominator	+=		1.0 / (variances[i] + previousMLTauSquare);
 		}
 		
-		nextMLBeta = sumNumerator / sumDenominator;
-		sumNumerator = 0.0;
-		sumDenominator = 0.0;
+		nextMLBeta		= sumNumerator / sumDenominator;
+		sumNumerator	= 0.0;
+		sumDenominator	= 0.0;
 
 		for (int i = 0; i < nStudy_; i++) {
-			sumNumerator += (pow(betas[i] - nextMLBeta, 2.0) - variances[i]) / pow(variances[i] + previousMLTauSquare, 2.0);
-			sumDenominator += 1.0 / pow(variances[i] + previousMLTauSquare, 2.0);
+			sumNumerator	+= (pow(betas[i] - nextMLBeta, 2.0) - variances[i]) / pow(variances[i] + previousMLTauSquare, 2.0);
+			sumDenominator	+= 1.0 / pow(variances[i] + previousMLTauSquare, 2.0);
 		}
 
 		nextMLTauSquare = sumNumerator / sumDenominator;
@@ -805,14 +818,14 @@ void MetaSnp::computeHanEskin(double lambdaMeanEffect, double lambdaHeterogeneit
 	}
 
 	// Genomic-control
-	statisticHanEskinMeanEffectPart_ /= lambdaMeanEffect;
+	statisticHanEskinMeanEffectPart_	/= lambdaMeanEffect;
 	statisticHanEskinHeterogeneityPart_ /= lambdaHeterogeneity;
 	statisticHanEskin_ = statisticHanEskinMeanEffectPart_ +	statisticHanEskinHeterogeneityPart_;
 
 	// Compute asymptotic p-value
 	pvalueHanEskinAsymptotic_ =
-		0.5 * (1-boost::math::gamma_p<double, double>(1.0/2.0, statisticHanEskin_/2.0))+
-		0.5 * (1-boost::math::gamma_p<double, double>(2.0/2.0, statisticHanEskin_/2.0));
+		0.5 * chiSquareComplemented(1.0, statisticHanEskin_) +//(1-boost::math::gamma_p<double, double>(1.0/2.0, statisticHanEskin_/2.0))+
+		0.5 * chiSquareComplemented(2.0, statisticHanEskin_);//(1-boost::math::gamma_p<double, double>(2.0/2.0, statisticHanEskin_/2.0));
 	
 	// Use table to calculate accurate p-value
 	if (nStudy_ <= TABLE_MAX_NSTUDY) {
@@ -840,16 +853,16 @@ void MetaSnp::computeHanEskin(double lambdaMeanEffect, double lambdaHeterogeneit
 				exit(-1);
 			}
 			double asymptoticPvalueAtIndexBottom =
-				0.5 * (1-boost::math::gamma_p<double, double>(1.0/2.0, (nearestIndexBottom / 10.0)/2.0)) +
-				0.5 * (1-boost::math::gamma_p<double, double>(2.0/2.0, (nearestIndexBottom / 10.0)/2.0));
+				0.5 * chiSquareComplemented(1.0, nearestIndexBottom / 10.0) +//(1-boost::math::gamma_p<double, double>(1.0/2.0, (nearestIndexBottom / 10.0)/2.0)) +
+				0.5 * chiSquareComplemented(2.0, nearestIndexBottom / 10.0);//(1-boost::math::gamma_p<double, double>(2.0/2.0, (nearestIndexBottom / 10.0)/2.0));
 			double ratioAtIndexBottom = tablePvalueAtIndexBottom /
-				asymptoticPvalueAtIndexBottom;
+										asymptoticPvalueAtIndexBottom;
 			double tablePvalueAtIndexTop = pvalueTable_[rowNumber][nearestIndexTop];
 			double asymptoticPvalueAtIndexTop =
-				0.5 * (1-boost::math::gamma_p<double, double>(1.0/2.0, (nearestIndexTop / 10.0)/2.0)) +
-				0.5 * (1-boost::math::gamma_p<double, double>(2.0/2.0, (nearestIndexTop / 10.0)/2.0));
+				0.5 * chiSquareComplemented(1.0, nearestIndexTop / 10.0) +//(1-boost::math::gamma_p<double, double>(1.0/2.0, (nearestIndexTop / 10.0)/2.0)) +
+				0.5 * chiSquareComplemented(2.0, nearestIndexTop / 10.0);//(1-boost::math::gamma_p<double, double>(2.0/2.0, (nearestIndexTop / 10.0)/2.0));
 			double ratioAtIndexTop = tablePvalueAtIndexTop /
-				asymptoticPvalueAtIndexTop;
+										asymptoticPvalueAtIndexTop;
 			double ratioInterpolated =
 				ratioAtIndexBottom + (ratioAtIndexTop - ratioAtIndexBottom) *
 				(statisticHanEskin_ - nearestIndexBottom / 10.0) / 0.1;
@@ -859,10 +872,10 @@ void MetaSnp::computeHanEskin(double lambdaMeanEffect, double lambdaHeterogeneit
 			int    rowNumber = nStudy_ - 2;
 			double tablePvalueAtTheEnd = pvalueTable_[rowNumber][TABLE_NCOLUMN - 1];
 			double asymptoticPvalueAtTheEnd =
-				0.5 * (1-boost::math::gamma_p<double, double>(1.0/2.0, TABLE_MAX_THRESHOLD/2.0)) +
-				0.5 * (1-boost::math::gamma_p<double, double>(2.0/2.0, TABLE_MAX_THRESHOLD/2.0));
+				0.5 * chiSquareComplemented(1.0, TABLE_MAX_THRESHOLD) +//(1-boost::math::gamma_p<double, double>(1.0/2.0, TABLE_MAX_THRESHOLD/2.0)) +
+				0.5 * chiSquareComplemented(2.0, TABLE_MAX_THRESHOLD);//(1-boost::math::gamma_p<double, double>(2.0/2.0, TABLE_MAX_THRESHOLD/2.0));
 			double ratioAtTheEnd = tablePvalueAtTheEnd /
-				asymptoticPvalueAtTheEnd;
+									asymptoticPvalueAtTheEnd;
 			pvalueHanEskinTabulated_ = ratioAtTheEnd * pvalueHanEskinAsymptotic_;
 		}
 	}
@@ -893,6 +906,10 @@ double MetaSnp::getMvalue(int i) {
 		exit(-1);
 	}
 	return mvalues_.at(i);
+}
+
+double MetaSnp::getPvalue(int i) {
+	return chiSquareComplemented(1.0, pow(betas_.at(i) / standardErrors_.at(i), 2.0));
 }
 
 double MetaSnp::getPvalueFixedEffects() {

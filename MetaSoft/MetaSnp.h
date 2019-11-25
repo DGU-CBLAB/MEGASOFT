@@ -14,15 +14,18 @@
 #include<vector>
 #include<time.h>
 #include<math.h>
+#include<cmath>
 #include<thread>
 #include<mutex>
 #include<map>
 #include<boost/math/distributions/normal.hpp>
 #include<boost/math/distributions/beta.hpp>
 #include<boost/math/distributions/find_location.hpp>
+#include<boost/math/distributions.hpp>
 #define M_PI acos(-1.0) // Accurate PI constant
 #define NORMAL_EXECUTION 1
 #define ABNORMAL_EXECUTION -1
+// Statistical functions
 
 class map_tuple {
 public:
@@ -39,8 +42,8 @@ void split(std::vector<std::string>& tokens, const std::string& str, const std::
 class MetaSnp {
 private:
 	std::string  rsid_;
-	int nStudy_ = 0;
-	int nStudyIncludingNa_ = 0;
+	int nStudy_				= 0;
+	int nStudyIncludingNa_	= 0;
 	double statisticFixedEffects_;
 	double pvalueFixedEffects_;
 	double betaFixedEffects_;
@@ -60,6 +63,7 @@ private:
 	double pvalueQ_;
 	double statisticISquare_;
 	double statisticTauSquare_;
+	bool isFixedEffectsComputed_ = false;
 	bool isRandomEffectsComputed_ = false;
 	bool isHeterogeneityComputed_ = false;
 	bool isHvaluesComputed_ = false;
@@ -69,13 +73,14 @@ private:
 	bool isBinaryEffectsPvalueComputed_ = false;
 	std::vector<double>  betas_;
 	std::vector<double>  standardErrors_;
-	std::vector<bool> isNa_;
+	std::vector<bool>	 isNa_;
 	std::vector<double>  hvalues_;
 	std::vector<double>  mvalues_;
 	static double ML_ESTIMATE_CHANGE_RATIO_THRESHOLD;
 	static double LOG_SQRT2PI;
 public:
-	bool isFixedEffectsComputed_ = false;
+	double logBeta(double m, double n);
+	double chiSquareComplemented(double x, double v);
 	MetaSnp(std::string rsid);
 	void addStudy(double beta, double standardError);
 	void addNaStudy();
@@ -87,7 +92,7 @@ public:
 	void computeMvaluesMCMC(double priorAlpha, double priorBeta, double priorSigma,
 		long sample, long burnin, double probRandom, double maxNumFlipArg, int seed);
 private:
-	double observationLogLikelihood(double* betas, int betas_n, double* ts, bool* H1, int numH1, double priorVar);
+	double observationLogLikelihood(double* betas, double* ts, bool* H1, int numH1, double priorVar);
 public:
 	void computeHvalues();
 	void printPvaluesAndHvalues();
@@ -101,10 +106,7 @@ public:
 	int getNStudy() { return nStudy_; }
 	double getHvalue(int i);
 	double getMvalue(int i);
-	double getPvalue(int i) {
-		return 1 - boost::math::gamma_p<double, double>(1.0 / 2.0,
-			pow(betas_.at(i) / standardErrors_.at(i), 2.0) / 2.0);
-	}
+	double getPvalue(int i);
 	double getPvalueFixedEffects();
 	double getBetaFixedEffects();
 	double getStandardErrorFixedEffects();

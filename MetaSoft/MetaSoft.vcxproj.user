@@ -1,4 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LocalDebuggerCommandArguments>--input C:\Users\JohnC\Desktop\NICE\test\inputMS.txt --mvalue --mvalue_method mcmc --mcmc_sample 1000000 --seed 0 --mvalue_prior_sigma 0.05 --mvalue_prior_alpha 1 --mvalue_prior_beta 5 --pvalue_table C:\Users\JohnC\Desktop\NICE\HanEskinPvalueTable.txt --output C:\Users\JohnC\Desktop\NICE\test\posterior_c__.txt --mvalue_p_thres 1.0 --thread 1</LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LocalDebuggerCommandArguments>--input C:\Users\JohnC\Desktop\NICE\test\inputMS.txt --mvalue --mvalue_method mcmc --mcmc_sample 1000000 --seed 0 --mvalue_prior_sigma 0.05 --mvalue_prior_alpha 1 --mvalue_prior_beta 5 --pvalue_table C:\Users\JohnC\Desktop\NICE\HanEskinPvalueTable.txt --output C:\Users\JohnC\Desktop\NICE\test\posterior_c__.txt --mvalue_p_thres 1.0 --thread 1</LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LocalDebuggerCommandArguments>--input C:\Users\JohnC\Desktop\NICE\test\inputMS.txt --mvalue --mvalue_method mcmc --mcmc_sample 1000000 --seed 0 --mvalue_prior_sigma 0.05 --mvalue_prior_alpha 1 --mvalue_prior_beta 5 --pvalue_table C:\Users\JohnC\Desktop\NICE\HanEskinPvalueTable.txt --output C:\Users\JohnC\Desktop\NICE\test\posterior_c__.txt --mvalue_p_thres 1.0 --thread 1</LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LocalDebuggerCommandArguments>--input C:\Users\JohnC\Desktop\NICE\test\inputMS.txt --mvalue --mvalue_method mcmc --mcmc_sample 1000000 --seed 0 --mvalue_prior_sigma 0.05 --mvalue_prior_alpha 1 --mvalue_prior_beta 5 --pvalue_table C:\Users\JohnC\Desktop\NICE\HanEskinPvalueTable.txt --output C:\Users\JohnC\Desktop\NICE\test\posterior_c__.txt --mvalue_p_thres 1.0 --thread 1</LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
 </Project>

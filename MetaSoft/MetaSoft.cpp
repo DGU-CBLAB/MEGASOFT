@@ -1,6 +1,6 @@
-#include"MetaSnp.h";
+#include "MetaSnp.h";
 #include <ctime>
-#include<boost/program_options.hpp>
+#include <boost/program_options.hpp>
 
 namespace po = boost::program_options;
 
@@ -10,7 +10,7 @@ static std::mutex mtx;
 // Arguments and default values
 static std::string  inputFile_ = "";
 static std::string  outputFile_ = "out";
-static std::string  logFile_ = ".\log";
+static std::string  logFile_ = ".\\log";
 static std::string  pvalueTableFile_ = "HanEskinPvalueTable.txt";
 static double  inputLambdaMeanEffect_ = 1.0;
 static double  inputLambdaHeterogeneity_ = 1.0;
@@ -246,19 +246,19 @@ void thr_func(std::string readLine, FILE* outFile) {
 			for (int i = 0; i < nStudy; i++) {
 				double beta;
 				double standardError;
-				if (tokens.at(2 * i + 1).compare("NA") == 0 ||
-					tokens.at(2 * i + 1).compare("N/A") == 0 ||
-					tokens.at(2 * i + 2).compare("NA") == 0 ||
-					tokens.at(2 * i + 2).compare("N/A") == 0) {
+				if (tokens.at((2.0 * i) + 1.0).compare("NA") == 0 ||
+					tokens.at((2.0 * i) + 1.0).compare("N/A") == 0 ||
+					tokens.at((2.0 * i) + 1.0).compare("NA") == 0 ||
+					tokens.at((2.0 * i) + 1.0).compare("N/A") == 0) {
 					metaSnp->addNaStudy();
 				}
 				else {
 					try {
-						beta = stod(tokens.at(2 * i + 1));
-						standardError = stod(tokens.at(2 * i + 2));
+						beta = stod(tokens.at((2.0 * i) + 1.0));
+						standardError = stod(tokens.at(2.0 * i + 2.0));
 						if (standardError <= 0.0) {
 							printf("Standard error cannot be <= zero (%d th column is %f) in the following line.\n",
-								2 * i + 3, standardError);
+								2.0 * i + 3.0, standardError);
 							printf("%s", readLine.c_str());
 							std::exit(-1);
 						}
@@ -322,6 +322,7 @@ void thr_func(std::string readLine, FILE* outFile) {
 	tokens.clear();
 }
 void doMetaAnalysis() {
+	srand(seed_);
 	numSnps_ = 0;
 	maxNumStudy_ = 0;
 	meanEffectParts_ = std::vector<double>();
@@ -332,14 +333,12 @@ void doMetaAnalysis() {
 	}
 	catch (std::exception e) {
 		printErrorAndQuit("ERROR: Input file cannot be opened");
-		exit(-1);
 	}
 	try {
 		outFile = fopen(outputFile_.c_str(), "w");
 	}
 	catch (std::exception e) {
 		printErrorAndQuit("ERROR: Ouput file cannot be opened");
-		exit(-1);
 	}
 	// Print headings
 	MetaSnp::printHeadings(outFile);
@@ -423,13 +422,13 @@ void computeLambda() {
 	double median;
 	double expectedMedian;
 	if (meanEffectParts_.size() > 0) {
-		std::sort(meanEffectParts_.begin(), meanEffectParts_.begin() + meanEffectParts_.size());
+		std::sort(meanEffectParts_.begin(), meanEffectParts_.end());
 		median = meanEffectParts_.at((int)(meanEffectParts_.size() / 2.0));
 		expectedMedian = pow(boost::math::find_location<boost::math::normal>(boost::math::complement(0, 0.25, 1.0)), 2.0);
 		outputLambdaMeanEffect_ = median / expectedMedian;
 	}
 	if (heterogeneityParts_.size() > 0) {
-		std::sort(heterogeneityParts_.begin(), heterogeneityParts_.begin() + heterogeneityParts_.size());
+		std::sort(heterogeneityParts_.begin(), heterogeneityParts_.end());
 		median = heterogeneityParts_.at((int)(heterogeneityParts_.size() / 2.0));
 		if (maxNumStudy_ > 50) {
 			expectedMedian = pow(boost::math::find_location<boost::math::normal>(boost::math::complement(0, 0.25, 1.0)), 2.0);
