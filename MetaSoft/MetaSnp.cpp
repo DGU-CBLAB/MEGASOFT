@@ -198,22 +198,20 @@ void MetaSnp::computeRandomEffects() {
 void MetaSnp::computeMvalues(double priorAlpha, double priorBeta, double priorSigma) {
 	mvalues_.clear();
 	double priorVar = priorSigma * priorSigma;
-	double* betas = (double*)malloc(sizeof(double)*nStudy_);
-	double* ts = (double*)malloc(sizeof(double)*nStudy_); // Precision
+	double* betas	= (double*)malloc(sizeof(double)*nStudy_);
+	double* ts		= (double*)malloc(sizeof(double)*nStudy_); // Precision
 
 	for (int i = 0; i < nStudy_; i++) {
-		betas[i] = betas_.at(i);
-		ts[i] = 1.0 / pow(standardErrors_.at(i), 2.0);
+		betas[i]	= betas_.at(i);
+		ts[i]		= 1.0 / pow(standardErrors_.at(i), 2.0);
 	}
 
-	bool* H1 = (bool*)malloc(sizeof(bool)*nStudy_);	// Array defining configuration
+	bool* H1			= (bool*)malloc(sizeof(bool)*nStudy_);	// Array defining configuration
 	double* priorConfig = (double*)malloc(sizeof(double)*(nStudy_ + 1));	// Prob of each configuration with respect to # of studies with effect
 
 	for (int i = 0; i <= nStudy_; i++) {
 		priorConfig[i] = exp(logBeta(i + priorAlpha, nStudy_ - i + priorBeta))
-			/ exp(logBeta(priorAlpha, priorBeta));
-							//exp(log(boost::math::beta<double,double>(i + priorAlpha, nStudy_ - i + priorBeta)))
-							/// exp(log(boost::math::beta<double,double>(priorAlpha, priorBeta)));
+					/ exp(logBeta(priorAlpha, priorBeta));
 	}
 
 	double* accumProbH0 = (double*)malloc(sizeof(double)*nStudy_);	// Accumulate probability for each study
@@ -249,27 +247,27 @@ void MetaSnp::computeMvalues(double priorAlpha, double priorBeta, double priorSi
 		// Second for alternative points
 		double probAltPoints = 1.0;
 		if (numH1 > 0) {
-			double sum_t = 0.0;
-			double sum_tm = 0.0;
-			double sum_tmm = 0.0;
-			double prod_t = 1.0;
+			double sum_t	= 0.0;
+			double sum_tm	= 0.0;
+			double sum_tmm	= 0.0;
+			double prod_t	= 1.0;
 
 			for (int i = 0; i < nStudy_; i++) {
 				if (H1[i]) {
-					sum_t += ts[i];
-					sum_tm += ts[i] * betas[i];
+					sum_t	+= ts[i];
+					sum_tm	+= ts[i] * betas[i];
 					sum_tmm += ts[i] * betas[i] * betas[i];
-					prod_t *= ts[i];
+					prod_t	*= ts[i];
 				}
 			}
 
-			double betaJoint = sum_tm / sum_t;
-			double tJoint = sum_t;
-			double tconst = 1 / ((1 / tJoint) + priorVar);
-			double scaleFactor = sqrt(prod_t / sum_t) * pow(2 * M_PI, -0.5*(numH1 - 1))
-				* exp(-(sum_tmm - sum_tm * sum_tm / sum_t) / 2);
-			double jointPDF = sqrt(tconst / (2 * M_PI)) * exp(-tconst * betaJoint * betaJoint / 2);
-			probAltPoints = jointPDF * scaleFactor;
+			double betaJoint	= sum_tm / sum_t;
+			double tJoint		= sum_t;
+			double tconst		= 1 / ((1 / tJoint) + priorVar);
+			double scaleFactor	= sqrt(prod_t / sum_t) * pow(2 * M_PI, -0.5*(numH1 - 1))
+								* exp(-(sum_tmm - sum_tm * sum_tm / sum_t) / 2);
+			double jointPDF		= sqrt(tconst / (2 * M_PI)) * exp(-tconst * betaJoint * betaJoint / 2);
+			probAltPoints		= jointPDF * scaleFactor;
 		} // end of if
 
 		for (int i = 0; i < nStudy_; i++) {
@@ -286,6 +284,7 @@ void MetaSnp::computeMvalues(double priorAlpha, double priorBeta, double priorSi
 		double mvalue = accumProbH1[i] / (accumProbH0[i] + accumProbH1[i]);
 		mvalues_.push_back(mvalue);
 	}
+
 	isMvaluesComputed_ = true;
 
 	free(betas);
@@ -298,7 +297,7 @@ void MetaSnp::computeMvalues(double priorAlpha, double priorBeta, double priorSi
 
 void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double priorSigma, long sample, long burnin, double probRandom, double maxNumFlipArg, int seed) {
 	int maxNumFlip = 1;
-
+	
 	if (maxNumFlipArg < 1.0) {
 		maxNumFlip = (int)floor(maxNumFlipArg * nStudy_);
 		if (maxNumFlip < 1) {
@@ -312,21 +311,19 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 	mvalues_.clear();
 	double priorVar = priorSigma * priorSigma;
 	srand(seed);
-	double* betas = (double*)malloc(sizeof(double)*nStudy_);
-	double* ts = (double*)malloc(sizeof(double)*nStudy_); // Precision
+	double* betas	= (double*)malloc(sizeof(double)*nStudy_);
+	double* ts		= (double*)malloc(sizeof(double)*nStudy_); // Precision
 
 	for (int i = 0; i < nStudy_; i++) {
 		betas[i] = betas_.at(i);
 		ts[i] = 1.0 / pow(standardErrors_.at(i), 2.0);
 	}
-	bool* H1 = (bool*)malloc(sizeof(bool)*nStudy_); // Array defining configuration
-	double* logPriorConfig = (double*)malloc(sizeof(double)*(nStudy_ + 1.0)); // Prob of each configuration with respect to # of studies with effect
+	bool* H1				= (bool*)malloc(sizeof(bool)*nStudy_); // Array defining configuration
+	double* logPriorConfig	= (double*)malloc(sizeof(double)*(nStudy_ + 1.0)); // Prob of each configuration with respect to # of studies with effect
 
 	for (int i = 0; i <= nStudy_; i++) {
 		logPriorConfig[i] = logBeta(i + priorAlpha, nStudy_ - i + priorBeta)
-			- logBeta(priorAlpha, priorBeta);
-			//log(boost::math::beta<double,double>(i + priorAlpha, nStudy_ - i + priorBeta))
-			//- log(boost::math::beta<double,double>(priorAlpha, priorBeta));
+								- logBeta(priorAlpha, priorBeta);
 	}
 
 	int* accumCntH0 = (int*)malloc(sizeof(int)*nStudy_); // Accumullate count for each study
@@ -340,7 +337,7 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 	// Start from a random configuration
 	int numH1 = 0;
 	for (int i = 0; i < nStudy_; i++) {
-		if (rand() % 2 == 1) {
+		if (rand() % 2) { // study i has an effect
 			H1[i] = true;
 		}
 		else H1[i] = false;
@@ -348,10 +345,10 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 		if (H1[i]) numH1++;
 	}
 	
-	long burninCount = burnin;
-	long chainCount = 0;
-	bool* tmp = (bool*)malloc(sizeof(bool)*nStudy_);
-	int* shuffleBuffer = (int*)malloc(sizeof(int)*nStudy_);
+	long burninCount	= burnin;
+	long chainCount		= 0;
+	bool* tmp			= (bool*)malloc(sizeof(bool)*nStudy_);
+	int* shuffleBuffer	= (int*)malloc(sizeof(int)*nStudy_);
 
 	for (int i = 0; i < nStudy_; i++) {
 		shuffleBuffer[i] = i;
@@ -361,18 +358,16 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 	while (chainCount < sample) {
 		double currentLogProb = observationLogLikelihood(betas, ts, H1, numH1, priorVar) + logPriorConfig[numH1];
 		
-		if (rand() / (double)RAND_MAX > probRandom) {
+		if ((double)rand() / (double)RAND_MAX > probRandom) {
 			// Usual jump
-			int numFlip = rand()%maxNumFlip + 1;
+			int numFlip = rand() % maxNumFlip + 1;
 			if (numFlip > nStudy_) {
 				numFlip = nStudy_;
 			}
 
 			for (int i = 0; i < numFlip; i++) {
 				int pick = rand() % (nStudy_ - i);
-				int t = shuffleBuffer[i];
-				shuffleBuffer[i] = shuffleBuffer[i + pick];
-				shuffleBuffer[i + pick] = t;
+				std::swap(shuffleBuffer[i], shuffleBuffer[i + pick]);
 			}
 
 			for (int i = 0; i < numFlip; i++) {
@@ -383,7 +378,7 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 
 			double nextLogProb = observationLogLikelihood(betas, ts, H1, numH1, priorVar) + logPriorConfig[numH1];
 
-			if (nextLogProb > currentLogProb || rand() / (double)RAND_MAX < exp(nextLogProb - currentLogProb)) {
+			if (nextLogProb > currentLogProb || ((double)rand() / (double)RAND_MAX) < exp(nextLogProb - currentLogProb)) {
 				//Move
 				currentLogProb = nextLogProb;
 			}
@@ -405,12 +400,12 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 				}
 				else tmp[i] = false;
 			
-				if (tmp[i]) tmpNumH1++;
+				if (tmp[i] == true) tmpNumH1++;
 			}
 
 			double nextLogProb = observationLogLikelihood(betas, ts, tmp, tmpNumH1, priorVar) + logPriorConfig[tmpNumH1];
 
-			if (nextLogProb > currentLogProb || rand() / (double)RAND_MAX < exp(nextLogProb - currentLogProb)) {
+			if (nextLogProb > currentLogProb || ((double)rand() / (double)RAND_MAX) < exp(nextLogProb - currentLogProb)) {
 				// Move
 				// Copy tmp to H1
 				for (int cpy = 0; cpy < nStudy_; cpy++) {
@@ -431,7 +426,7 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 		}
 		else {
 			for (int i = 0; i < nStudy_; i++) {
-				if (H1[i]) {
+				if (H1[i] == true) {
 					accumCntH1[i]++;
 				}
 				else {
@@ -444,7 +439,8 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 
 	for (int i = 0; i < nStudy_; i++) {
 		//cout << accumCntH0[i] << "\t" << accumCntH1[i] << endl;
-		double mvalue = (double)accumCntH1[i] / (accumCntH0[i] + accumCntH1[i]);
+		double mvalue = (double)accumCntH1[i] / (double)(accumCntH0[i] + accumCntH1[i]);
+		std::cout << accumCntH1[i] << "\t:\t" << accumCntH0[i] << "\t:\t" << mvalue << std::endl;
 		mvalues_.push_back(mvalue);
 	}
 	isMvaluesComputed_ = true;
@@ -468,14 +464,14 @@ double MetaSnp::observationLogLikelihood(double* betas, double* ts, bool* H1, in
 		if (!H1[i]) {
 			logProbNullPoints += 0.5 * log(ts[i]) - LOG_SQRT2PI - ts[i] * betas[i] * betas[i] / 2;
 		}
-	}
+	}// end of for
 
 	// Second for alternative points
 	double logProbAltPoints = 0;
 	if (numH1 > 0) {
-		double sum_t = 0.0;
-		double sum_tm = 0.0;
-		double sum_tmm = 0.0;
+		double sum_t	= 0.0;
+		double sum_tm	= 0.0;
+		double sum_tmm	= 0.0;
 		double sum_logt = 0.0;
 
 		for (int i = 0; i < n; i++) {
@@ -493,7 +489,7 @@ double MetaSnp::observationLogLikelihood(double* betas, double* ts, bool* H1, in
 								- (sum_tmm - sum_tm * sum_tm / sum_t) / 2;
 		double logJointPDF		= 0.5 * log(tconst) - LOG_SQRT2PI - tconst * betaJoint * betaJoint / 2;
 		logProbAltPoints		= logJointPDF + logScaleFactor;
-	}
+	}// end of if
 	return logProbNullPoints + logProbAltPoints;
 }
 
@@ -567,6 +563,7 @@ void MetaSnp::computeBinaryEffectsStatistic() {
 }
 
 void MetaSnp::computeBinaryEffectsPvalue(long numSampling, int seed) {
+	srand(seed);
 	if (!isBinaryEffectsStatisticComputed_) {
 		computeBinaryEffectsStatistic();
 	}
@@ -719,19 +716,20 @@ void MetaSnp::computeHanEskin(double lambdaMeanEffect, double lambdaHeterogeneit
 		exit(-1);
 	}
 
-	double* betas = (double*)malloc(sizeof(double)*nStudy_);
-	double* variances = (double*)malloc(sizeof(double)*nStudy_);
-	double* weights = (double*)malloc(sizeof(double)*nStudy_);
+	double* betas		= (double*)malloc(sizeof(double)*nStudy_);
+	double* variances	= (double*)malloc(sizeof(double)*nStudy_);
+	double* weights		= (double*)malloc(sizeof(double)*nStudy_);
 
 	for (int i = 0; i < nStudy_; i++) {
-		betas[i] = betas_.at(i);
-		variances[i] = pow(standardErrors_.at(i), 2.0);
-		weights[i] = 1.0 / variances[i];
+		betas[i]		= betas_.at(i);
+		variances[i]	= pow(standardErrors_.at(i), 2.0);
+		weights[i]		= 1.0 / variances[i];
 	}
 
-	double sumBetaProdWeight = 0.0;
-	double sumWeight = 0.0;
-	double sumWeightSquare = 0.0;
+	double sumBetaProdWeight	= 0.0;
+	double sumWeight			= 0.0;
+	double sumWeightSquare		= 0.0;
+
 	for (int i = 0; i < nStudy_; i++) {
 		sumBetaProdWeight	+= betas[i] * weights[i];
 		sumWeight			+= weights[i];
@@ -790,14 +788,14 @@ void MetaSnp::computeHanEskin(double lambdaMeanEffect, double lambdaHeterogeneit
 		changeRatioMLTauSquare = abs((nextMLTauSquare - previousMLTauSquare) / previousMLTauSquare);
 
 		if (changeLogLikelihood < 0.0) { // If somehow likelihood decreases,
-			nextMLBeta = previousMLBeta;  // step back and finish.
+			nextMLBeta		= previousMLBeta;  // step back and finish.
 			nextMLTauSquare = previousMLTauSquare;
 			break;
 		}
 	} // end of while
 
-	double MLBeta = nextMLBeta;
-	double MLTauSquare = nextMLTauSquare;
+	double MLBeta		= nextMLBeta;
+	double MLTauSquare	= nextMLTauSquare;
 	// Compute statistics based on ML parameters
 	double sumFormula1 = 0.0;
 	double sumFormula2 = 0.0;
@@ -811,7 +809,7 @@ void MetaSnp::computeHanEskin(double lambdaMeanEffect, double lambdaHeterogeneit
 		sumFormula4 += pow(betas[i] - MLBeta, 2.0) / (variances[i] + MLTauSquare);
 	}
 
-	statisticHanEskinMeanEffectPart_ = sumFormula2 - sumFormula3;
+	statisticHanEskinMeanEffectPart_	= sumFormula2 - sumFormula3;
 	statisticHanEskinHeterogeneityPart_ = sumFormula1 + sumFormula3 - sumFormula4;
 	if (statisticHanEskinHeterogeneityPart_ < 0.0) {
 		statisticHanEskinHeterogeneityPart_ = 0.0;
@@ -998,7 +996,7 @@ void MetaSnp::printHeadings(FILE* outFile) {
 }
 
 void MetaSnp::printResults(FILE* f) {
-	fprintf(f,"%s\t", rsid_);
+	fprintf(f,"%s\t", rsid_.c_str());
 	fprintf(f,"%d\t", nStudy_);
 	if (isFixedEffectsComputed_) {
 		fprintf(f,"%.6G\t", pvalueFixedEffects_);
