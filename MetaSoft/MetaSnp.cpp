@@ -1,5 +1,5 @@
 #include"MetaSnp.h"
-#define __STDCPP_WANT_MATH_SPEC_FUNCS__ 1 
+#define __STDCPP_WANT_MATH_SPEC_FUNCS__ 1
 /*
 	Functional Replacement
 	java : Probability.chiSquareComplemented(v, x)
@@ -13,11 +13,8 @@
 #define NEGINF -INFINITY
 double MetaSnp::logBeta(double m, double n) {
 	return log(std::beta(m,n));
-	//return log(boost::math::tgamma(m) * boost::math::tgamma(n) / boost::math::tgamma(m + n));
 }
 double MetaSnp::chiSquareComplemented(double v, double x) {
-	//boost::math::chi_squared dist(v);
-	//return boost::math::cdf(dist, x)/2;
 	return (1 - boost::math::gamma_p<double, double>(v / 2.0, x / 2.0));
 }
 // purpose : thread result comparison
@@ -41,10 +38,7 @@ void split(std::vector<std::string>& tokens, const std::string& str, const std::
 			tokens.push_back(token);
 		}
 		prev = pos + delim.length();
-		//cout << token << endl;
 	} while (pos < str.length() && prev < str.length());
-
-	//return tokens;
 }
 
 double MetaSnp::ML_ESTIMATE_CHANGE_RATIO_THRESHOLD = 0.00001;
@@ -53,6 +47,7 @@ double MetaSnp::LOG_SQRT2PI = 0.5*log(2 * M_PI);
 double MetaSnp::TABLE_MAX_THRESHOLD = 33.0;
 double** MetaSnp::pvalueTable_;
 bool MetaSnp::isPvalueTableRead_ = false;
+
 MetaSnp::MetaSnp(std::string rsid) {
 	rsid_			= rsid;
 	betas_			= std::vector<double>();
@@ -81,9 +76,9 @@ void MetaSnp::computeFixedEffects(double lambdaMeanEffect) {
 	double* weights		= (double*)malloc(sizeof(double)*nStudy_);
 
 	for (int i = 0; i < nStudy_; i++) {
-		betas[i] = betas_.at(i);
-		variances[i] = pow(standardErrors_.at(i), 2.0);
-		weights[i] = 1.0 / variances[i];
+		betas[i]		= betas_.at(i);
+		variances[i]	= pow(standardErrors_.at(i), 2.0);
+		weights[i]		= 1.0 / variances[i];
 	}
 
 	double sumBetaProdWeight	= 0.0;
