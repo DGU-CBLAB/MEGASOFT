@@ -3,6 +3,7 @@
 ## Table of Content
 - [About](#about)
 - [How to Use](#use)
+- [Prerequisite](#prerequisite)
 - [Reference](#reference)
 
 #
@@ -54,6 +55,12 @@ Metasoft.exe [option]
     -thread <INT>                       Number of thread to use(default=1)
     -verbose                            Print RSID verbosely per every 1,000 SNPs (default=false)
     -help                               Print help
+```
+#
+## Prerequisite<a name="prerequisite"></a>
+In order to Improve and Edit METASOFT C++, <a href="https://www.boost.org/">boost library</a> is required.
+```
+boost-x64 1.71.0
 ```
 
 #
