@@ -51,6 +51,7 @@ Metasoft.exe [option]
     -mcmc_prob_random_move <FLOAT>      (MCMC) Probability that a complete randomization move is
                                         suggested (default=0.01)
     -seed <INT>                         Random number generator seed (default=0)
+    -thread <INT>                       Number of thread to use(default=1)
     -verbose                            Print RSID verbosely per every 1,000 SNPs (default=false)
     -help                               Print help
 ```
