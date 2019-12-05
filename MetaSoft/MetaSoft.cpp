@@ -1,4 +1,4 @@
-#include "MetaSnp.h";
+            #include "MetaSnp.h";
 #include <ctime>
 #include <boost/program_options.hpp>
 
@@ -313,7 +313,7 @@ void thr_func(std::string readLine, FILE* outFile) {
 					}
 				}
 				numSnps_++;
-			}
+			}// end of if
 			mtx.lock();
 			metaSnp->printResults(outFile);
 			mtx.unlock();

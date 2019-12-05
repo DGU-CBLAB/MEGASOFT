@@ -295,13 +295,10 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 	
 	if (maxNumFlipArg < 1.0) {
 		maxNumFlip = (int)floor(maxNumFlipArg * nStudy_);
-		if (maxNumFlip < 1) {
-			maxNumFlip = 1;
-		}
+		if (maxNumFlip < 1)	maxNumFlip = 1;
 	}
-	else {
+	else
 		maxNumFlip = (int)floor(maxNumFlipArg);
-	}
 	
 	mvalues_.clear();
 	double priorVar = priorSigma * priorSigma;
@@ -332,7 +329,7 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 	// Start from a random configuration
 	int numH1 = 0;
 	for (int i = 0; i < nStudy_; i++) {
-		if (rand() % 2) { // study i has an effect
+		if (rand() % 2 == 1) { // study i has an effect
 			H1[i] = true;
 		}
 		else H1[i] = false;
@@ -433,9 +430,7 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 	}// end of while
 
 	for (int i = 0; i < nStudy_; i++) {
-		//cout << accumCntH0[i] << "\t" << accumCntH1[i] << endl;
 		double mvalue = (double)accumCntH1[i] / (double)(accumCntH0[i] + accumCntH1[i]);
-		std::cout << accumCntH1[i] << "\t:\t" << accumCntH0[i] << "\t:\t" << mvalue << std::endl;
 		mvalues_.push_back(mvalue);
 	}
 	isMvaluesComputed_ = true;
@@ -480,8 +475,9 @@ double MetaSnp::observationLogLikelihood(double* betas, double* ts, bool* H1, in
 		double betaJoint		= sum_tm / sum_t;
 		double tJoint			= sum_t;
 		double tconst			= 1 / ((1 / tJoint) + priorVar);
-		double logScaleFactor	= -(numH1 - 1)*LOG_SQRT2PI + 0.5*sum_logt - 0.5* log(sum_t)
-								- (sum_tmm - sum_tm * sum_tm / sum_t) / 2;
+		double logScaleFactor	= 
+			-(numH1 - 1)*LOG_SQRT2PI + 0.5*sum_logt - 0.5* log(sum_t)
+			- (sum_tmm - sum_tm * sum_tm / sum_t) / 2;
 		double logJointPDF		= 0.5 * log(tconst) - LOG_SQRT2PI - tconst * betaJoint * betaJoint / 2;
 		logProbAltPoints		= logJointPDF + logScaleFactor;
 	}// end of if
@@ -531,7 +527,7 @@ void MetaSnp::printPvaluesAndHvalues() {
 }
 
 void MetaSnp::computeBinaryEffectsStatistic() {
-	if (!isHeterogeneityComputed_) {
+	if (!isHvaluesComputed_) {
 		computeHvalues();
 	}
 	double* zs = (double*)malloc(sizeof(double)*nStudy_);
@@ -558,16 +554,16 @@ void MetaSnp::computeBinaryEffectsStatistic() {
 }
 
 void MetaSnp::computeBinaryEffectsPvalue(long numSampling, int seed) {
-	srand(seed);
 	if (!isBinaryEffectsStatisticComputed_) {
 		computeBinaryEffectsStatistic();
 	}
+	srand(seed);
 	double* zs = (double*)malloc(sizeof(double)*nStudy_);
 	double* ws = (double*)malloc(sizeof(double)*nStudy_);
 
 	for (int i = 0; i < nStudy_; i++) {
 		zs[i] = betas_.at(i) / standardErrors_.at(i);
-		ws[i] = 1.0 / standardErrors_.at(i);
+		ws[i] = 1.0			 / standardErrors_.at(i);
 	}
 
 	double z = abs(statisticBinaryEffects_);
@@ -635,7 +631,7 @@ void MetaSnp::computeBinaryEffectsPvalue(long numSampling, int seed) {
 			}
 		}
 
-		unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+		//unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
 		std::default_random_engine generator(seed);
 		std::normal_distribution<double> distribution(0.0, 1.0);
 
@@ -645,7 +641,7 @@ void MetaSnp::computeBinaryEffectsPvalue(long numSampling, int seed) {
 		}
 
 		for (i = 0; i < n; i++) {
-			if ((double)rand() / (double)RAND_MAX <= (double)m / (double)n) {
+			if ((double)rand() / (double)RAND_MAX <= (double)m / n) {
 				samplezs[i] = samplezs[i] * stds[m] + xs[m];
 			}
 			samplebeta[i] = samplezs[i] / ws[i];
@@ -663,8 +659,9 @@ void MetaSnp::computeBinaryEffectsPvalue(long numSampling, int seed) {
 			for (m = 1; m <= n; m++) {
 				p_situation = pdf_num_alt[m];
 				for (k = 0; k < n; k++) {
-					p_left		= ((double)(n - (double)m) / n)*(1. / sqrt(2 * M_PI))*exp(-0.5*samplezs[k] * samplezs[k]);
-					p_right		= ((double)m / n)*(1. /sqrt(2 * M_PI*stds[m] * stds[m]))*exp(-0.5*(samplezs[k] - xs[m])*(samplezs[k] - xs[m]) / (stds[m] * stds[m]));
+					p_left		= ((double)(n - m) / n)*(1. / sqrt(2 * M_PI))*exp(-0.5*samplezs[k] * samplezs[k]);
+					p_right		= ((double)m / n)*(1. /sqrt(2 * M_PI*stds[m] * stds[m]))
+						*exp(-0.5*(samplezs[k] - xs[m])*(samplezs[k] - xs[m]) / (stds[m] * stds[m]));
 					p_situation *= p_left + p_right;
 				}
 				p_sample += p_situation;
