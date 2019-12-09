@@ -92,7 +92,7 @@ public:
 	void computeMvaluesMCMC(double priorAlpha, double priorBeta, double priorSigma,
 		long sample, long burnin, double probRandom, double maxNumFlipArg, int seed);
 private:
-	double observationLogLikelihood(double* betas, double* ts, bool* H1, int numH1, double priorVar);
+	double observationLogLikelihood(double* betas, int betas_size, double* ts, bool* H1, int numH1, double priorVar);
 public:
 	void computeHvalues();
 	void printPvaluesAndHvalues();

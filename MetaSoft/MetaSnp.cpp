@@ -16,6 +16,7 @@ double MetaSnp::logBeta(double m, double n) {
 }
 double MetaSnp::chiSquareComplemented(double v, double x) {
 	return (1 - boost::math::gamma_p<double, double>(v / 2.0, x / 2.0));
+	//return boost::math::gamma_q<double, double>(v / 2.0, x / 2.0);
 }
 // purpose : thread result comparison
 bool map_comp(const map_tuple& a, const map_tuple& b) {
@@ -42,7 +43,7 @@ void split(std::vector<std::string>& tokens, const std::string& str, const std::
 }
 
 double MetaSnp::ML_ESTIMATE_CHANGE_RATIO_THRESHOLD = 0.00001;
-double MetaSnp::LOG_SQRT2PI = 0.5*log(2 * M_PI);
+double MetaSnp::LOG_SQRT2PI = 0.5*log(2 * (double)M_PI);
 
 double MetaSnp::TABLE_MAX_THRESHOLD = 33.0;
 double** MetaSnp::pvalueTable_;
@@ -257,7 +258,7 @@ void MetaSnp::computeMvalues(double priorAlpha, double priorBeta, double priorSi
 			}
 
 			double betaJoint	= sum_tm / sum_t;
-			double tJoint		= sum_t;
+			double tJoint		= sum_t;                                
 			double tconst		= 1 / ((1 / tJoint) + priorVar);
 			double scaleFactor	= sqrt(prod_t / sum_t) * pow(2 * M_PI, -0.5*(numH1 - 1))
 								* exp(-(sum_tmm - sum_tm * sum_tm / sum_t) / 2);
@@ -291,18 +292,22 @@ void MetaSnp::computeMvalues(double priorAlpha, double priorBeta, double priorSi
 }
 
 void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double priorSigma, long sample, long burnin, double probRandom, double maxNumFlipArg, int seed) {
+	srand(seed);
+
 	int maxNumFlip = 1;
-	
+	std::random_device rd;  //Will be used to obtain a seed for the random number engine
+	std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+	std::uniform_real_distribution<> randDouble(0.0, 1.0);
+
 	if (maxNumFlipArg < 1.0) {
 		maxNumFlip = (int)floor(maxNumFlipArg * nStudy_);
 		if (maxNumFlip < 1)	maxNumFlip = 1;
 	}
-	else
-		maxNumFlip = (int)floor(maxNumFlipArg);
+	else maxNumFlip = (int)floor(maxNumFlipArg);
 	
 	mvalues_.clear();
 	double priorVar = priorSigma * priorSigma;
-	srand(seed);
+	
 	double* betas	= (double*)malloc(sizeof(double)*nStudy_);
 	double* ts		= (double*)malloc(sizeof(double)*nStudy_); // Precision
 
@@ -314,8 +319,8 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 	double* logPriorConfig	= (double*)malloc(sizeof(double)*(nStudy_ + 1.0)); // Prob of each configuration with respect to # of studies with effect
 
 	for (int i = 0; i <= nStudy_; i++) {
-		logPriorConfig[i] = logBeta(i + priorAlpha, nStudy_ - i + priorBeta)
-								- logBeta(priorAlpha, priorBeta);
+		logPriorConfig[i] = logBeta(i + priorAlpha, nStudy_ - (double)i + priorBeta)
+							- logBeta(priorAlpha, priorBeta);
 	}
 
 	int* accumCntH0 = (int*)malloc(sizeof(int)*nStudy_); // Accumullate count for each study
@@ -329,12 +334,8 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 	// Start from a random configuration
 	int numH1 = 0;
 	for (int i = 0; i < nStudy_; i++) {
-		if (rand() % 2 == 1) { // study i has an effect
-			H1[i] = true;
-		}
-		else H1[i] = false;
-
-		if (H1[i]) numH1++;
+		H1[i] = (0 + (rand() % (1 - 0 + 1)) == 1);//rand() % 2;
+		if (H1[i] == 1) numH1++;
 	}
 	
 	long burninCount	= burnin;
@@ -348,13 +349,13 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 
 	// Chain
 	while (chainCount < sample) {
-		double currentLogProb = observationLogLikelihood(betas, ts, H1, numH1, priorVar) + logPriorConfig[numH1];
-		
-		if ((double)rand() / (double)RAND_MAX > probRandom) {
+		double currentLogProb = observationLogLikelihood(betas, nStudy_, ts, H1, numH1, priorVar) + logPriorConfig[numH1];
+		if( randDouble(gen) > probRandom){
+		//if ((double)rand() / (double)RAND_MAX > probRandom) {
 			// Usual jump
-			int numFlip = rand() % maxNumFlip + 1;
+			int numFlip = (rand() % maxNumFlip) + 1;
 			if (numFlip > nStudy_) {
-				numFlip = nStudy_;
+				numFlip = numFlip % nStudy_;
 			}
 
 			for (int i = 0; i < numFlip; i++) {
@@ -368,9 +369,10 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 				numH1 += H1[j] ? 1 : -1;
 			}
 
-			double nextLogProb = observationLogLikelihood(betas, ts, H1, numH1, priorVar) + logPriorConfig[numH1];
+			double nextLogProb = observationLogLikelihood(betas, nStudy_, ts, H1, numH1, priorVar) + logPriorConfig[numH1];
 
-			if (nextLogProb > currentLogProb || ((double)rand() / (double)RAND_MAX) < exp(nextLogProb - currentLogProb)) {
+			if (nextLogProb > currentLogProb || randDouble(gen) < exp(nextLogProb - currentLogProb)) {
+//			if (nextLogProb > currentLogProb || ((double)rand() / RAND_MAX) < exp(nextLogProb - currentLogProb)) {
 				//Move
 				currentLogProb = nextLogProb;
 			}
@@ -387,17 +389,14 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 			// Randomization move
 			int tmpNumH1 = 0;
 			for (int i = 0; i < nStudy_; i++) {
-				if (rand() % 2 == 1) {
-					tmp[i] = true;
-				}
-				else tmp[i] = false;
-			
-				if (tmp[i] == true) tmpNumH1++;
+				tmp[i] = (0 + (rand() % (1 - 0 + 1)) == 1);//rand() % 2;
+				if (tmp[i]) tmpNumH1++;
 			}
 
-			double nextLogProb = observationLogLikelihood(betas, ts, tmp, tmpNumH1, priorVar) + logPriorConfig[tmpNumH1];
-
-			if (nextLogProb > currentLogProb || ((double)rand() / (double)RAND_MAX) < exp(nextLogProb - currentLogProb)) {
+			double nextLogProb = observationLogLikelihood(betas, nStudy_, ts, tmp, tmpNumH1, priorVar) + logPriorConfig[tmpNumH1];
+			//std::cout << currentLogProb << "\t:\t" << nextLogProb << std::endl;
+			if (nextLogProb > currentLogProb || randDouble(gen) < exp(nextLogProb - currentLogProb)) {
+			//if (nextLogProb > currentLogProb || ((double)rand() / RAND_MAX) < exp(nextLogProb - currentLogProb)) {
 				// Move
 				// Copy tmp to H1
 				for (int cpy = 0; cpy < nStudy_; cpy++) {
@@ -428,9 +427,9 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 			chainCount++;
 		}// end of if
 	}// end of while
-
+	
 	for (int i = 0; i < nStudy_; i++) {
-		double mvalue = (double)accumCntH1[i] / (double)(accumCntH0[i] + accumCntH1[i]);
+		double mvalue = (double)accumCntH1[i] / (accumCntH0[i] + accumCntH1[i]);
 		mvalues_.push_back(mvalue);
 	}
 	isMvaluesComputed_ = true;
@@ -445,13 +444,13 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 	free(shuffleBuffer);
 }
 
-double MetaSnp::observationLogLikelihood(double* betas, double* ts, bool* H1, int numH1, double priorVar) {
-	int n = nStudy_;
+double MetaSnp::observationLogLikelihood(double* betas, int betas_size, double* ts, bool* H1, int numH1, double priorVar) {
+	int n = betas_size;
 
 	// First for null points
 	double logProbNullPoints = 0;
 	for (int i = 0; i < n; i++) {
-		if (!H1[i]) {
+		if (H1[i] == false) {
 			logProbNullPoints += 0.5 * log(ts[i]) - LOG_SQRT2PI - ts[i] * betas[i] * betas[i] / 2;
 		}
 	}// end of for
@@ -480,6 +479,7 @@ double MetaSnp::observationLogLikelihood(double* betas, double* ts, bool* H1, in
 			- (sum_tmm - sum_tm * sum_tm / sum_t) / 2;
 		double logJointPDF		= 0.5 * log(tconst) - LOG_SQRT2PI - tconst * betaJoint * betaJoint / 2;
 		logProbAltPoints		= logJointPDF + logScaleFactor;
+
 	}// end of if
 	return logProbNullPoints + logProbAltPoints;
 }
