@@ -15,8 +15,8 @@
 #include<time.h>
 #include<math.h>
 #include<cmath>
-#include<thread>
 #include<mutex>
+#include<thread>
 #include<map>
 #include<boost/math/distributions/normal.hpp>
 #include<boost/math/distributions/beta.hpp>

@@ -1,12 +1,14 @@
-            #include "MetaSnp.h";
+#include "MetaSnp.h"
 #include <ctime>
 #include <boost/program_options.hpp>
-
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/thread.hpp>
 namespace po = boost::program_options;
 
 // Multi-Thread variables
 static int threadNum_ = 1;
-static std::mutex mtx;
+//static std::mutex mtx;
+static boost::mutex mtx;
 // Arguments and default values
 static std::string  inputFile_ = "";
 static std::string  outputFile_ = "out";
@@ -348,16 +350,18 @@ void doMetaAnalysis() {
 		std::ifstream inStream(inputFile_);
 		std::string readLine;
 		int count = 0;
-		std::vector<std::thread> tr_vec;
+		//std::vector<std::thread> tr_vec;
+		std::vector < boost::thread> tr_vec;
 		while (std::getline(inStream, readLine)) {
-			tr_vec.push_back(std::thread(thr_func, readLine, outFile));
+			tr_vec.push_back(boost::thread(thr_func, readLine, outFile));
 			bool b = false;
 			while (true) {
 				if (b == true || tr_vec.size() < threadNum_) {
 					break;
 				}
 				else {
-					std::this_thread::sleep_for(std::chrono::seconds(1));
+					boost::this_thread::sleep_for(boost::chrono::seconds(1));
+					//std::this_thread::sleep_for(std::chrono::seconds(1));
 				}
 				for (int k = 0; k < tr_vec.size(); k++) {
 					if (tr_vec.at(k).joinable()) {
@@ -391,7 +395,8 @@ void doMetaAnalysis() {
 	try {
 		std::string readLine;
 		FILE* file = fopen(outputFile_.c_str(), "r");
-		std::ifstream Instream(file);
+		//std::ifstream Instream(file);
+		std::ifstream Instream(outputFile_.c_str());
 
 		std::getline(Instream, readLine); // ignore first line
 		
@@ -413,6 +418,7 @@ void doMetaAnalysis() {
 		fclose(outfile);
 	}
 	catch (std::exception e) {
+		printf("%s\n", e.what());
 		printf("ERROR: Posterior.txt file has been altered!");
 		std::exit(-1);
 	}
