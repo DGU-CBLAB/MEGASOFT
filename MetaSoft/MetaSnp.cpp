@@ -1,4 +1,5 @@
 #include"MetaSnp.h"
+#include<boost/math/special_functions/beta.hpp>
 #define __STDCPP_WANT_MATH_SPEC_FUNCS__ 1
 /*
 	Functional Replacement
@@ -12,7 +13,8 @@
 #define POSINF INFINITY
 #define NEGINF -INFINITY
 double MetaSnp::logBeta(double m, double n) {
-	return log(std::beta(m,n));
+	// return log(std::beta(m,n));
+	return log(boost::math::beta(m,n));
 }
 double MetaSnp::chiSquareComplemented(double v, double x) {
 	return (1 - boost::math::gamma_p<double, double>(v / 2.0, x / 2.0));
