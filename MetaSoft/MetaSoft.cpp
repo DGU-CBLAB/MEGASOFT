@@ -322,7 +322,6 @@ void thr_func(std::string readLine, FILE* outFile) {
 		}
 	}
 	tokens.clear();
-	exit(1);
 }
 void doMetaAnalysis() {
 	srand(seed_);
@@ -354,6 +353,7 @@ void doMetaAnalysis() {
 		//std::vector<std::thread> tr_vec;
 		std::vector <boost::thread> tr_vec;
 		while (std::getline(inStream, readLine)) {
+			// std::cout << tr_vec.size() << std::endl;
 			tr_vec.push_back(boost::thread(thr_func, readLine, outFile));
 			bool b = false;
 			while (true) {
@@ -361,8 +361,9 @@ void doMetaAnalysis() {
 					break;
 				}
 				else {
-					boost::this_thread::sleep_for(boost::chrono::microseconds(10));
-					//std::this_thread::sleep_for(std::chrono::seconds(1));
+					// boost::this_thread::sleep_for(boost::chrono::nanoseconds(1));
+					// boost::this_thread::sleep_for(boost::chrono::seconds(1));
+					// std::this_thread::sleep_for(std::chrono::seconds(1));
 				}
 				for (int k = 0; k < tr_vec.size(); k++) {
 					if (tr_vec.at(k).joinable()) {
