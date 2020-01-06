@@ -516,7 +516,7 @@ void MetaSnp::printPvaluesAndHvalues() {
 	if (pvalueHanEskinTabulated_ < pvalueFixedEffects_
 		&& pvalueHanEskinTabulated_ < pvalueRandomEffects_) {
 		
-		printf("%s ", rsid_);
+		printf("%s ", rsid_.c_str());
 
 		for (int i = 0; i < nStudy_; i++) {
 			printf("%.5E ", getPvalue(i));
@@ -837,7 +837,7 @@ void MetaSnp::computeHanEskin(double lambdaMeanEffect, double lambdaHeterogeneit
 				tablePvalueAtIndexBottom = pvalueTable_[rowNumber][nearestIndexBottom];
 			}
 			catch (std::exception e) {
-				printf("%f %f %f %f\n", 
+				printf("%f %f %d %d\n", 
 					statisticHanEskinMeanEffectPart_,
 					statisticHanEskinHeterogeneityPart_,
 					nearestIndexBottom,
@@ -986,7 +986,7 @@ void MetaSnp::printHeadings(FILE* outFile) {
 	std::string str = "RSID\t#STUDY\tPVALUE_FE\tBETA_FE\tSTD_FE\tPVALUE_RE\tBETA_RE\tSTD_RE\t";
 	str += "PVALUE_RE2\tSTAT1_RE2\tSTAT2_RE2\tPVALUE_BE\tI_SQUARE\tQ\tPVALUE_Q\tTAU_SQUARE\t";
 	str += "PVALUES_OF_STUDIES(Tab_delimitered)\tMVALUES_OF_STUDIES(Tab_delimitered)\n";
-	fprintf(outFile,str.c_str());
+	fprintf(outFile,"%s",str.c_str());
 }
 
 void MetaSnp::printResults(FILE* f) {

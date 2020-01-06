@@ -259,7 +259,7 @@ void thr_func(std::string readLine, FILE* outFile) {
 						beta = stod(tokens.at((2.0 * i) + 1.0));
 						standardError = stod(tokens.at(2.0 * i + 2.0));
 						if (standardError <= 0.0) {
-							printf("Standard error cannot be <= zero (%d th column is %f) in the following line.\n",
+							printf("Standard error cannot be <= zero (%f th column is %f) in the following line.\n",
 								2.0 * i + 3.0, standardError);
 							printf("%s", readLine.c_str());
 							std::exit(-1);
@@ -322,6 +322,7 @@ void thr_func(std::string readLine, FILE* outFile) {
 		}
 	}
 	tokens.clear();
+	exit(1);
 }
 void doMetaAnalysis() {
 	srand(seed_);
@@ -351,7 +352,7 @@ void doMetaAnalysis() {
 		std::string readLine;
 		int count = 0;
 		//std::vector<std::thread> tr_vec;
-		std::vector < boost::thread> tr_vec;
+		std::vector <boost::thread> tr_vec;
 		while (std::getline(inStream, readLine)) {
 			tr_vec.push_back(boost::thread(thr_func, readLine, outFile));
 			bool b = false;
@@ -360,7 +361,7 @@ void doMetaAnalysis() {
 					break;
 				}
 				else {
-					boost::this_thread::sleep_for(boost::chrono::seconds(1));
+					boost::this_thread::sleep_for(boost::chrono::microseconds(10));
 					//std::this_thread::sleep_for(std::chrono::seconds(1));
 				}
 				for (int k = 0; k < tr_vec.size(); k++) {
