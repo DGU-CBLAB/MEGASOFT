@@ -402,7 +402,6 @@ void doMetaAnalysis() {
 	try {
 		std::string readLine;
 		FILE* file = fopen(outputFile_.c_str(), "r");
-		//std::ifstream Instream(file);
 		std::ifstream Instream(outputFile_.c_str());
 
 		std::getline(Instream, readLine); // ignore first line
