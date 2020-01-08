@@ -111,4 +111,5 @@ boost-x64 1.71.0
 
 ## Reference <a name="reference"></a>
 
-<a href="http://genetics.cs.ucla.edu/meta/">Original Software </a>
+- <a href="http://genetics.cs.ucla.edu/meta/">METASOFT</a>
+- <a href="https://www.boost.org/">Boost</a>
