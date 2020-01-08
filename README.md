@@ -1,14 +1,15 @@
-## METASOFT C++
+# MEGASOFT (c++)
 
 ## Table of Content
 - [About](#about)
 - [How to Use](#use)
 - [Prerequisite](#prerequisite)
+- [Compile](#compile)
 - [Reference](#reference)
 
 #
 ## About <a name="about"></a>
-In Genome-wide association Study Analysis(GWAS), <a href="http://genetics.cs.ucla.edu/meta/">METASOFT</a> is considered a widely used software, which is effective in performing wide range of basic and complicated meta-analytic methods. However, <a href="http://genetics.cs.ucla.edu/meta/">METASOFT</a> can be improved in terms of computing performance. This repository is another version of <a href="http://genetics.cs.ucla.edu/meta/">METASOFT</a> where computing load balancing is used to improve computing time.
+In Genome-wide association Study Analysis(GWAS), <a href="http://genetics.cs.ucla.edu/meta/">METASOFT</a> is considered a widely used software, which is effective in performing wide range of basic and complicated meta-analytic methods. However, <a href="http://genetics.cs.ucla.edu/meta/">METASOFT</a> can be improved in terms of computing performance. This repository is another version of <a href="http://genetics.cs.ucla.edu/meta/">METASOFT</a> refered as <a href="https://github.com/JuhunC/MEGASOFT">MEGASOFT</a> where computing load balancing is used to improve computing time.
 
 #
 
@@ -16,9 +17,11 @@ In Genome-wide association Study Analysis(GWAS), <a href="http://genetics.cs.ucl
 
 <a href="http://genetics.cs.ucla.edu/meta/">Overview Link</a>
 
-User's Guide (differ from original METASOFT)
+User's Guide (differ from METASOFT)
 ```
-Metasoft.exe [option]
+MEGASOFT_WIN64.exe [option]
+MEGASOFT_LINUX.o [option]
+
 -input <FILE>                       Input file (Required)
     -output <FILE>                      Output file (default='out')
     -log <FILE>                         Log file (default='log')
@@ -62,8 +65,50 @@ In order to Improve and Edit METASOFT C++, <a href="https://www.boost.org/">boos
 ```
 boost-x64 1.71.0
 ```
-
 #
+## How to Compile <a href="https://github.com/JuhunC/MEGASOFT">MEGASOFT</a><a name="compile"></a>
+<a href="https://www.boost.org/users/download/">Boost Download link</a>
+
+### Windows x64 - using Visual Studio 2019(v142)
+1. `boostrap.bat`
+
+2. `b2 variant=debug,release link=static threading=multi address-model=64 runtime-link=static -j4 install --prefix=stage`
+3. `Project Properties Page -> Configuration Properties -> VC++ Directories -> Include Directories`
+    ``` 
+    ADD YOUR_BOOST_DIR 
+    ..\boost_1_72_0\stage\include\boost-1_72\
+    ```
+4. `Project Properties Page -> Configuration Properties -> C/C++ -> Code Generation -> Runtime Library`
+    ```
+    Set to "Multi-threaded(/MT)"
+    ```
+5. `Project Properties Page -> Configuration Properties -> Linker -> General -> Additional Library Directories`
+    ```
+    ADD 
+    YOUR_BOOST_LIB_DIR ..\boost_1_72_0\stage\lib\
+    ```
+6. `Project Properties Page -> Configuration Properties -> Linker -> Input -> Additional Dependencies`
+    ```
+    ADD
+    libboost_program_options-vc142-mt-s-x64-1_72.lib
+    libboost_thread-vc142-mt-s-x64-1_72.lib
+    libboost_system-vc142-mt-s-x64-1_72.lib
+    ```
+### Linux - using MinGW(g++)
+1. `boostrap.sh`
+
+2. `b2 link=static`
+
+3.  ```
+    export BOOST_ROOT=/home/user/Desktop/boost_1_72_0
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BOOST_ROOT/stage/lib
+    ```
+4. Final Compile using g++
+    ```
+    sudo g++ -pthread -I BOOST_ROOT MetaSnp.cpp  MetaSnp.h MetaSoft.cpp LD_LIBRARY_PATH/libboost_thread.a LD_LIBRARY_PATH/libboost_program_options.a LD_LIBRARY_PATH/libboost_system.a -o out.o -g3 -static
+    ```
+
+
 ## Reference <a name="reference"></a>
 
 <a href="http://genetics.cs.ucla.edu/meta/">Original Software </a>
