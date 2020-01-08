@@ -4,7 +4,7 @@
 - [About](#about)
 - [How to Use](#use)
 - [Prerequisite](#prerequisite)
-- [Compile](#compile)
+- [Compile](#compile) ([windows](#windows), [linux](#linux))
 - [Reference](#reference)
 
 #
@@ -69,7 +69,7 @@ boost-x64 1.71.0
 ## How to Compile <a href="https://github.com/JuhunC/MEGASOFT">MEGASOFT</a><a name="compile"></a>
 <a href="https://www.boost.org/users/download/">Boost Download link</a>
 
-### Windows x64 - using Visual Studio 2019(v142)
+### Windows x64<a name="windows"></a> - using Visual Studio 2019(v142)
 1. `boostrap.bat`
 
 2. `b2 variant=debug,release link=static threading=multi address-model=64 runtime-link=static -j4 install --prefix=stage`
@@ -94,7 +94,7 @@ boost-x64 1.71.0
     libboost_thread-vc142-mt-s-x64-1_72.lib
     libboost_system-vc142-mt-s-x64-1_72.lib
     ```
-### Linux - using MinGW(g++)
+### Linux - using MinGW(g++)<a name="linux"></a>
 1. `boostrap.sh`
 
 2. `b2 link=static`
