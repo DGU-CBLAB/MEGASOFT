@@ -3,12 +3,17 @@
 #include <boost/program_options.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
+#include<mutex>
+#include<condition_variable>
 namespace po = boost::program_options;
 
 // Multi-Thread variables
 static int threadNum_ = 1;
 //static std::mutex mtx;
 static boost::mutex mtx;
+static std::mutex cond_var_mtx;
+static std::condition_variable cond_var;
+static bool flag = false;
 // Arguments and default values
 static std::string  inputFile_ = "";
 static std::string  outputFile_ = "out";
@@ -322,6 +327,11 @@ void thr_func(std::string readLine, FILE* outFile) {
 		}
 	}
 	tokens.clear();
+
+	// Signal parent process(thread) to wake up
+	std::lock_guard<std::mutex> lock(cond_var_mtx);
+	flag = true;
+	cond_var.notify_one();
 }
 void doMetaAnalysis() {
 	srand(seed_);
@@ -350,10 +360,8 @@ void doMetaAnalysis() {
 		std::ifstream inStream(inputFile_);
 		std::string readLine;
 		int count = 0;
-		//std::vector<std::thread> tr_vec;
 		std::vector <boost::thread> tr_vec;
 		while (std::getline(inStream, readLine)) {
-			// std::cout << tr_vec.size() << std::endl;
 			tr_vec.push_back(boost::thread(thr_func, readLine, outFile));
 			bool b = false;
 			while (true) {
@@ -362,9 +370,10 @@ void doMetaAnalysis() {
 				}
 				else {
 					std::cout << "Current Progress : "<< count << " finished." <<"\r";
-					// boost::this_thread::sleep_for(boost::chrono::nanoseconds(1));
-					// boost::this_thread::sleep_for(boost::chrono::seconds(1));
-					// std::this_thread::sleep_for(std::chrono::seconds(1));
+					// Wait for child thread's signal
+					std::unique_lock<std::mutex> lock(cond_var_mtx);
+					cond_var.wait_for(lock, std::chrono::seconds(10), []() { return flag; });
+					flag = false;
 				}
 				for (int k = 0; k < tr_vec.size(); k++) {
 					if (tr_vec.at(k).joinable()) {
