@@ -89,14 +89,14 @@ public:
 	void computeRandomEffects();
 	void computeMvalues(double priorAlpha, double priorBeta, double priorSigma);
 	void computeMvaluesMCMC(double priorAlpha, double priorBeta, double priorSigma,
-		long sample, long burnin, double probRandom, double maxNumFlipArg, int seed);
+		long sample, long burnin, double probRandom, double maxNumFlipArg, unsigned int seed);
 private:
 	double observationLogLikelihood(double* betas, int betas_size, double* ts, bool* H1, int numH1, double priorVar);
 public:
 	void computeHvalues();
 	void printPvaluesAndHvalues();
 	void computeBinaryEffectsStatistic();
-	void computeBinaryEffectsPvalue(long numSampling, int seed);
+	void computeBinaryEffectsPvalue(long numSampling, unsigned int seed);
 	void computeHanEskin(double lambdaMeanEffect, double lambdaHeterogeneity);
 protected:
 	static std::string configToString(bool* H1, int H1_n);

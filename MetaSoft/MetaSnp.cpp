@@ -293,7 +293,7 @@ void MetaSnp::computeMvalues(double priorAlpha, double priorBeta, double priorSi
 	free(accumProbH1);
 }
 
-void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double priorSigma, long sample, long burnin, double probRandom, double maxNumFlipArg, int seed) {
+void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double priorSigma, long sample, long burnin, double probRandom, double maxNumFlipArg, unsigned int seed) {
 	srand(seed);
 
 	int maxNumFlip = 1;
@@ -336,7 +336,7 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 	// Start from a random configuration
 	int numH1 = 0;
 	for (int i = 0; i < nStudy_; i++) {
-		H1[i] = (0 + (rand() % (1 - 0 + 1)) == 1);//rand() % 2;
+		H1[i] = (0 + (rand_r(&seed) % (1 - 0 + 1)) == 1);//rand_r(&seed) % 2;
 		if (H1[i] == 1) numH1++;
 	}
 	
@@ -353,15 +353,15 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 	while (chainCount < sample) {
 		double currentLogProb = observationLogLikelihood(betas, nStudy_, ts, H1, numH1, priorVar) + logPriorConfig[numH1];
 		if( randDouble(gen) > probRandom){
-		//if ((double)rand() / (double)RAND_MAX > probRandom) {
+		//if ((double)rand_r(&seed) / (double)RAND_MAX > probRandom) {
 			// Usual jump
-			int numFlip = (rand() % maxNumFlip) + 1;
+			int numFlip = (rand_r(&seed) % maxNumFlip) + 1;
 			if (numFlip > nStudy_) {
 				numFlip = numFlip % nStudy_;
 			}
 
 			for (int i = 0; i < numFlip; i++) {
-				int pick = rand() % (nStudy_ - i);
+				int pick = rand_r(&seed) % (nStudy_ - i);
 				std::swap(shuffleBuffer[i], shuffleBuffer[i + pick]);
 			}
 
@@ -374,7 +374,7 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 			double nextLogProb = observationLogLikelihood(betas, nStudy_, ts, H1, numH1, priorVar) + logPriorConfig[numH1];
 
 			if (nextLogProb > currentLogProb || randDouble(gen) < exp(nextLogProb - currentLogProb)) {
-//			if (nextLogProb > currentLogProb || ((double)rand() / RAND_MAX) < exp(nextLogProb - currentLogProb)) {
+//			if (nextLogProb > currentLogProb || ((double)rand_r(&seed) / RAND_MAX) < exp(nextLogProb - currentLogProb)) {
 				//Move
 				currentLogProb = nextLogProb;
 			}
@@ -391,14 +391,14 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 			// Randomization move
 			int tmpNumH1 = 0;
 			for (int i = 0; i < nStudy_; i++) {
-				tmp[i] = (0 + (rand() % (1 - 0 + 1)) == 1);//rand() % 2;
+				tmp[i] = (0 + (rand_r(&seed) % (1 - 0 + 1)) == 1);//rand_r(&seed) % 2;
 				if (tmp[i]) tmpNumH1++;
 			}
 
 			double nextLogProb = observationLogLikelihood(betas, nStudy_, ts, tmp, tmpNumH1, priorVar) + logPriorConfig[tmpNumH1];
 			//std::cout << currentLogProb << "\t:\t" << nextLogProb << std::endl;
 			if (nextLogProb > currentLogProb || randDouble(gen) < exp(nextLogProb - currentLogProb)) {
-			//if (nextLogProb > currentLogProb || ((double)rand() / RAND_MAX) < exp(nextLogProb - currentLogProb)) {
+			//if (nextLogProb > currentLogProb || ((double)rand_r(&seed) / RAND_MAX) < exp(nextLogProb - currentLogProb)) {
 				// Move
 				// Copy tmp to H1
 				for (int cpy = 0; cpy < nStudy_; cpy++) {
@@ -555,7 +555,7 @@ void MetaSnp::computeBinaryEffectsStatistic() {
 	free(zWeights);
 }
 
-void MetaSnp::computeBinaryEffectsPvalue(long numSampling, int seed) {
+void MetaSnp::computeBinaryEffectsPvalue(long numSampling, unsigned int seed) {
 	if (!isBinaryEffectsStatisticComputed_) {
 		computeBinaryEffectsStatistic();
 	}
@@ -603,7 +603,7 @@ void MetaSnp::computeBinaryEffectsPvalue(long numSampling, int seed) {
 		for (rep = 0; rep < 1000; rep++) {
 			// permute "a" list
 			for (i = 0; i < n; i++) {
-				j = i + (rand() % (n - i));
+				j = i + (rand_r(&seed) % (n - i));
 				std::swap(a[i], a[j]);
 			}
 			sumwssq = 0.0;
@@ -625,7 +625,7 @@ void MetaSnp::computeBinaryEffectsPvalue(long numSampling, int seed) {
 	cnt = 0;
 	for (long sam = 0; sam < numSampling; sam++) {
 		// First, randomly choose situation(# of alt)
-		rnd = rand() / (double)RAND_MAX;
+		rnd = rand_r(&seed) / (double)RAND_MAX;
 		for (i = 1; i <= n; i++) {
 			if (rnd <= cdf_num_alt[i]) {
 				m = i; // "m" is the situation number.
@@ -643,7 +643,7 @@ void MetaSnp::computeBinaryEffectsPvalue(long numSampling, int seed) {
 		}
 
 		for (i = 0; i < n; i++) {
-			if ((double)rand() / (double)RAND_MAX <= (double)m / n) {
+			if ((double)rand_r(&seed) / (double)RAND_MAX <= (double)m / n) {
 				samplezs[i] = samplezs[i] * stds[m] + xs[m];
 			}
 			samplebeta[i] = samplezs[i] / ws[i];

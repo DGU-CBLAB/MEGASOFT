@@ -35,7 +35,7 @@ static bool willComputeBinaryEffects_ = false;
 static long    binaryEffectsSample_ = 1000;
 static long    binaryEffectsLargeSample_ = 100000;
 static double  binaryEffectsPvalueThreshold_ = 1E-4;
-static int     seed_ = 0;
+static unsigned int     seed_ = 0;
 static bool isVerbose_ = false;
 // Internally used variables
 static int    numSnps_;
@@ -295,9 +295,9 @@ void thr_func(std::string readLine, FILE* outFile) {
 				}
 				// Binary effects model
 				if (willComputeBinaryEffects_) {
-					metaSnp->computeBinaryEffectsPvalue(binaryEffectsSample_, rand());
+					metaSnp->computeBinaryEffectsPvalue(binaryEffectsSample_, rand_r(&seed_));
 					if (metaSnp->getPvalueBinaryEffects() <= binaryEffectsPvalueThreshold_) {
-						metaSnp->computeBinaryEffectsPvalue(binaryEffectsLargeSample_, rand());
+						metaSnp->computeBinaryEffectsPvalue(binaryEffectsLargeSample_, rand_r(&seed_));
 					}
 				}
 				// Mvalues
@@ -311,7 +311,7 @@ void thr_func(std::string readLine, FILE* outFile) {
 							metaSnp->computeMvaluesMCMC(priorAlpha_, priorBeta_, priorSigma_,
 								mcmcSample_, mcmcBurnin_, mcmcProbRandom_,
 								mcmcMaxNumFlip_,
-								rand());
+								rand_r(&seed_));
 						}
 						else {
 							std::cout << mvalueMethod_ << std::endl;
@@ -369,11 +369,12 @@ void doMetaAnalysis() {
 					break;
 				}
 				else {
+					flag = false;
 					std::cout << "Current Progress : "<< count << " finished." <<"\r";
 					// Wait for child thread's signal
 					std::unique_lock<std::mutex> lock(cond_var_mtx);
-					cond_var.wait_for(lock, std::chrono::seconds(10), []() { return flag; });
-					flag = false;
+					cond_var.wait_for(lock, std::chrono::seconds(100), []() { return flag; });
+					
 				}
 				for (int k = 0; k < tr_vec.size(); k++) {
 					if (tr_vec.at(k).joinable()) {
