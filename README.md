@@ -9,7 +9,7 @@
 
 #
 ## About <a name="about"></a>
-In Genome-wide association Study Analysis(GWAS), <a href="http://genetics.cs.ucla.edu/meta/">METASOFT</a> is considered a widely used software, which is effective in performing wide range of basic and complicated meta-analytic methods. However, <a href="http://genetics.cs.ucla.edu/meta/">METASOFT</a> can be improved in terms of computing performance. This repository is another version of <a href="http://genetics.cs.ucla.edu/meta/">METASOFT</a> refered as <a href="https://github.com/JuhunC/MEGASOFT">MEGASOFT</a> where computing load balancing is used to improve computing time.
+<a href="https://github.com/JuhunC/MEGASOFT">MEGASOFT</a> is a next-level software of <a href="http://genetics.cs.ucla.edu/meta/">METASOFT</a>. In Genome-wide association Study Analysis(GWAS), METASOFT is considered a widely used software, which is effective in performing wide range of basic and complicated meta-analytic methods. However, in terms of scalability, METASOFT lack of memory efficiency as well as computing performance. <a href="https://github.com/JuhunC/MEGASOFT/">MEGASOFT</a> is an improved version of METASOFT refered as <a href="https://github.com/JuhunC/MEGASOFT">MEGASOFT</a> where load balancing is used to improve computing performance as well as memory efficiency.
 
 #
 
