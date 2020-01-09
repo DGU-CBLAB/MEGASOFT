@@ -25,7 +25,6 @@
 #define NORMAL_EXECUTION 1
 #define ABNORMAL_EXECUTION -1
 // Statistical functions
-
 class map_tuple {
 public:
 	int key;

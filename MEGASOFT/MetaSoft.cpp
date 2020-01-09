@@ -237,6 +237,7 @@ void printErrorAndQuit(std::string msg) {
 	std::exit(-1);
 }
 void thr_func(std::string readLine, FILE* outFile) {
+	srand(seed_);
 	MetaSnp* metaSnp;    // Store only 1 Snp at a time in memory.
 	std::vector<std::string> tokens;
 	split(tokens, readLine, " ");
@@ -295,9 +296,9 @@ void thr_func(std::string readLine, FILE* outFile) {
 				}
 				// Binary effects model
 				if (willComputeBinaryEffects_) {
-					metaSnp->computeBinaryEffectsPvalue(binaryEffectsSample_, rand_r(&seed_));
+					metaSnp->computeBinaryEffectsPvalue(binaryEffectsSample_, rand());
 					if (metaSnp->getPvalueBinaryEffects() <= binaryEffectsPvalueThreshold_) {
-						metaSnp->computeBinaryEffectsPvalue(binaryEffectsLargeSample_, rand_r(&seed_));
+						metaSnp->computeBinaryEffectsPvalue(binaryEffectsLargeSample_, rand());
 					}
 				}
 				// Mvalues
@@ -311,7 +312,7 @@ void thr_func(std::string readLine, FILE* outFile) {
 							metaSnp->computeMvaluesMCMC(priorAlpha_, priorBeta_, priorSigma_,
 								mcmcSample_, mcmcBurnin_, mcmcProbRandom_,
 								mcmcMaxNumFlip_,
-								rand_r(&seed_));
+								rand());
 						}
 						else {
 							std::cout << mvalueMethod_ << std::endl;
