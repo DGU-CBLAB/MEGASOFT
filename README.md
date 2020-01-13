@@ -13,14 +13,14 @@
 
 #
 
-## How to Use<a name="use"></a>
+## How to Use MEGASOFT<a name="use"></a>
 
 METASOFT <a href="http://genetics.cs.ucla.edu/meta/">Overview Link</a>
 
-User's Guide (differ from METASOFT)
+User's MEGASOFT Guide
 ```
-MEGASOFT_WIN64.exe [option]
-MEGASOFT_LINUX.o [option]
+MEGASOFT_WIN64.exe -input [inputMS.txt] [option1] [option2]
+MEGASOFT_LINUX.o -input [inputMS.txt] [option1] [option2]
 ```
 ```
 -input <FILE>                       Input file (Required)
@@ -96,7 +96,7 @@ MEGASOFT_LINUX.o [option]
 ```
 #
 ## Prerequisite<a name="prerequisite"></a>
-In order to Improve and Edit METASOFT C++, <a href="https://www.boost.org/">boost library</a> is required.
+In order to Improve and Edit MEGASOFT, <a href="https://www.boost.org/">boost library</a> is required.
 ```
 Windows                             boost-x64 1.72.0
 Linux                               boost-x64 1.72.0
