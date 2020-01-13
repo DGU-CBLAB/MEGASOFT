@@ -19,8 +19,8 @@ METASOFT <a href="http://genetics.cs.ucla.edu/meta/">Overview Link</a>
 
 User's MEGASOFT Guide
 ```
-MEGASOFT_WIN64.exe -input [inputMS.txt] [option1] [option2]
-MEGASOFT_LINUX.o -input [inputMS.txt] [option1] [option2]
+MEGASOFT_WIN64.exe -input [inputMS.txt] [option1] [option2] ...
+MEGASOFT_LINUX.o -input [inputMS.txt] [option1] [option2] ...
 ```
 ```
 -input <FILE>                       Input file (Required)
