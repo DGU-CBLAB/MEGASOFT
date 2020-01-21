@@ -4,7 +4,7 @@
 
 ## The package mvtnorm can computes multivariate normal and t probabilities, quantiles, random deviates and densities.
 require(mvtnorm)
-
+study_size = 40
 tau2.zero.prob=c(0.8415,0.7709,0.7413,0.7135,0.6989,0.6742,0.663,0.6542,0.6506,0.646,0.6411,0.6281,0.6229,0.6308,0.6299,0.6152,0.6103,0.6121,0.618,0.6049,0.6068,0.597,0.5924,0.5946,0.5954,0.5881,0.5899,0.5809,0.5922,0.5854,0.583,0.5794,0.5768,0.5817,0.5773,0.5848,0.5764,0.5821,0.5777,0.5804,0.5735,0.5736,0.5691,0.5674,0.5681,0.5739,0.5705,0.568,0.5587) ## From nstudy 2 to nstudy 50 (49 entries)
 
 RE2 <- function(beta, stders, ...) {
@@ -83,12 +83,12 @@ generate_studies = function(N, MAF, gamma, p = 1e-10){
   # reference  | c     | d 
   
   while ( p < 1e-8 ){
-    case_genotypes = rbinom(n = N_case, size = 2, prob = MAF_case)
-    cont_genotypes = rbinom(n = N_cont, size = 2, prob = MAF_cont)
+    case_genotypes = rbinom(n = N_case, size = study_size/4, prob = MAF_case)
+    cont_genotypes = rbinom(n = N_cont, size = study_size/4, prob = MAF_cont)
     a = sum(case_genotypes)
-    c = N_case * 2 - a
+    c = N_case * study_size/4 - a
     b = sum(cont_genotypes)
-    d = N_case * 2 - b
+    d = N_case * study_size/4 - b
     
     beta = log( (a * d) / (b * c) )
     var = (1/a + 1/b + 1/c + 1/d)
@@ -102,11 +102,10 @@ generate_studies = function(N, MAF, gamma, p = 1e-10){
 
 generate_a_simulation = function(RE2_p = 1)
 {
-  
   while ( RE2_p > 1e-8 )
   {
-    betas = rep(0, 8)
-    stders = rep(0, 8)
+    betas = rep(0, study_size)
+    stders = rep(0, study_size)
     
     ### In this simulation example, we assume four different types of studies.
     ## the first type 
@@ -114,7 +113,7 @@ generate_a_simulation = function(RE2_p = 1)
     gamma = 1.3 # relative risk 
     MAF = 0.3 # population minor allele frequency (fixed)
     
-    for ( j in 1:2 ){
+    for ( j in 1:(study_size/4) ){
       res = generate_studies(N, MAF, gamma, p = 1e-10)
       betas[j] = res[1]
       stders[j] = res[2]
@@ -125,7 +124,7 @@ generate_a_simulation = function(RE2_p = 1)
     gamma = 1.3
     MAF = 0.3 # population minor allele frequency (fixed)
     
-    for ( j in 3:4 ){
+    for ( j in (study_size/4+1):(study_size/4*2) ){
       res = generate_studies(N, MAF, gamma, p = 1e-10)
       betas[j] = res[1]
       stders[j] = res[2]
@@ -136,7 +135,7 @@ generate_a_simulation = function(RE2_p = 1)
     gamma = 1.0
     MAF = 0.3 # population minor allele frequency (fixed)
     
-    for ( j in 5:6 ){
+    for ( j in (study_size/4*2+1):(study_size/4*3) ){
       res = generate_studies(N, MAF, gamma, p = 1e-10)
       betas[j] = res[1]
       stders[j] = res[2]
@@ -147,7 +146,7 @@ generate_a_simulation = function(RE2_p = 1)
     gamma = 1.0
     MAF = 0.3 # population minor allele frequency (fixed)
     
-    for ( j in 7:8 ){
+    for ( j in (study_size/4*3+1):(study_size) ){
       res = generate_studies(N, MAF, gamma, p = 1e-10)
       betas[j] = res[1]
       stders[j] = res[2]
@@ -162,17 +161,18 @@ generate_a_simulation = function(RE2_p = 1)
 
 main = function(){
   M = 1000
-  betas = matrix(rep(0, M * 8), ncol = 8)
-  stders = matrix(rep(0, M * 8), ncol = 8)
+  betas = matrix(rep(0, M * study_size), ncol = study_size)
+  stders = matrix(rep(0, M * study_size), ncol = study_size)
   for (iter in 1:M)
   {
     res = generate_a_simulation()
     betas[iter,] = res['betas',]
     stders[iter,] = res['stders',]
+    print(iter)
   }
 
-  METASOFT_input = matrix(rep(0,(8*2+1)*M), nrow = M)
-  colnames(METASOFT_input) = c('SNP',paste(rep(paste('Study_',1:8, sep=''),each=2), rep(c('_beta','_se'),8),sep='')  )
+  METASOFT_input = matrix(rep(0,(study_size*2+1)*M), nrow = M)
+  colnames(METASOFT_input) = c('SNP',paste(rep(paste('Study_',1:study_size, sep=''),each=2), rep(c('_beta','_se'),study_size),sep='')  )
   SNP = paste(1:M,sep='')
   for (i in 1:M){
     METASOFT_input[i,] = c(SNP[i],as.vector(rbind(betas[i,],stders[i,])))
@@ -213,3 +213,4 @@ cat('Done \n')
 
 passed = Sys.time()-begin
 cat('Analysis time: ',passed,'secs')
+
