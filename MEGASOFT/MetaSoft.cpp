@@ -463,7 +463,7 @@ void computeLambda() {
 	}
 }
 
-void printLog() {
+void printLog(double time) {
 	try {
 		FILE* outFile = fopen(logFile_.c_str(),"w");
 		
@@ -478,6 +478,7 @@ void printLog() {
 		fprintf(outFile,"Specified lambda for heterogeneity part (default = 1.0): %f\n", inputLambdaHeterogeneity_);
 		fprintf(outFile,"Newly calculated inflation factor lambda for   mean effect part: %f\n", outputLambdaMeanEffect_);
 		fprintf(outFile,"Newly calculated inflation factor lambda for heterogeneity part: %f\n", outputLambdaHeterogeneity_);
+		fprintf(outFile,"Elapsed time : %.3f minutes\n",time);
 		fclose(outFile);
 	}
 	catch (std::exception e) {
@@ -497,9 +498,10 @@ int main(int argc, char* argv[]) {
 	std::cout << "---- Performing lambda compute\n";
 	computeLambda();
 	std::cout << "---- print Log\n";
-	printLog();
-	std::cout<<"----- Finished\n";
 	time_t endTime = time(NULL);
+	printLog(difftime(endTime, startTime)/60.0);
+	std::cout<<"----- Finished\n";
+	
 	std::cout << "----- Elapsed time: " << difftime(endTime,startTime)/60.0 << " minutes\n";
 
 	return NORMAL_EXECUTION;
