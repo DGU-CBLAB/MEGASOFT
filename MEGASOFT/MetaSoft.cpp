@@ -333,6 +333,7 @@ void thr_func(std::string readLine, FILE* outFile) {
 	std::lock_guard<std::mutex> lock(cond_var_mtx);
 	flag = true;
 	cond_var.notify_one();
+	exit(1);
 }
 void doMetaAnalysis() {
 	srand(seed_);
@@ -375,7 +376,6 @@ void doMetaAnalysis() {
 					// Wait for child thread's signal
 					std::unique_lock<std::mutex> lock(cond_var_mtx);
 					cond_var.wait_for(lock, std::chrono::seconds(100), []() { return flag; });
-					
 				}
 				for (int k = 0; k < tr_vec.size(); k++) {
 					if (tr_vec.at(k).joinable()) {
