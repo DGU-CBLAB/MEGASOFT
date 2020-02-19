@@ -363,11 +363,14 @@ void doMetaAnalysis() {
 		std::string readLine;
 		int count = 0;
 		std::vector <boost::thread> tr_vec;
+		int vec_size =0;
 		while (std::getline(inStream, readLine)) {
 			tr_vec.push_back(boost::thread(thr_func, readLine, outFile));
+			vec_size++;
 			bool b = false;
 			while (true) {
-				if (b == true || tr_vec.size() < threadNum_) {
+				if (b == true || vec_size < threadNum_) {
+					std::cout << vec_size<<"\n"<<std::endl;
 					break;
 				}
 				else {
@@ -376,15 +379,15 @@ void doMetaAnalysis() {
 					// Wait for child thread's signal
 					// std::unique_lock<std::mutex> lock(cond_var_mtx);
 					// cond_var.wait_for(lock, std::chrono::seconds(100), []() { return flag; });
-					boost::this_thread::sleep_for(boost::chrono::seconds(2));
+					boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
 				}
 				for (int k = 0; k < tr_vec.size(); k++) {
 					if (tr_vec.at(k).joinable()) {
 						tr_vec.at(k).join();
 						tr_vec.erase(tr_vec.begin() + k);
 						b = true;
+						vec_size--;
 						std::cout << "Current Progress : "<< ++count << " finished.\t" << tr_vec.size() <<" threads\t\t"<<"\r";
-						break;
 					}else
 					{
 						std::cout << "Current Progress : "<< count << " finished.\t" << tr_vec.size() <<" threads\t\t"<<"\r";
