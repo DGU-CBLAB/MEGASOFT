@@ -363,39 +363,76 @@ void doMetaAnalysis() {
 		std::string readLine;
 		int count = 0;
 		std::vector <boost::thread> tr_vec;
-		while (std::getline(inStream, readLine)) {
-			tr_vec.push_back(boost::thread(thr_func, readLine, outFile));
-			bool b = false;
-			while (true) {
-				if (b == true || tr_vec.size() < threadNum_) {
-					// std::cout << tr_vec.size()<<"\n"<<std::endl;
-					break;
-				}
-				else {
-					// flag = false;
-					std::cout << "Current Progress : "<< count << " finished.\t" << tr_vec.size() <<" threads\t\t"<<"\r";
-					// Wait for child thread's signal
-					// std::unique_lock<std::mutex> lock(cond_var_mtx);
-					// cond_var.wait_for(lock, std::chrono::seconds(100), []() { return flag; });
-					boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
-				}
-				for (int k = 0; k < tr_vec.size();) {
-					if (tr_vec.at(k).joinable()) {
-						tr_vec.at(k).join();
-						tr_vec.erase(tr_vec.begin() + k);
-						b = true;
-						std::cout << "Current Progress : "<< ++count << " finished.\t" << tr_vec.size() <<" threads\t\t"<<"\r";
-					}else
-					{
-						k++;
-						std::cout << "Current Progress : "<< count << " finished.\t" << tr_vec.size() <<" threads\t\t"<<"\r";
+		tr_vec.resize(threadNum_);
+		for(int i =0;i<threadNum_;i++){
+			if(std::getline(inStream, readLine))
+				tr_vec.at(i) = boost::thread(thr_func, readLine, outFile);
+			else
+			{
+				break;
+			}
+			
+		}
+		bool clear_all = false;
+		int last;
+		while(!clear_all){
+			for(int i =0;i<threadNum_;i++){
+				if (tr_vec.at(i).joinable()) {
+					tr_vec.at(i).join();
+					if(std::getline(inStream, readLine)){
+						tr_vec.at(i) = boost::thread(thr_func, readLine, outFile);
+					}else{
+						last = i;
+						clear_all = true;
 					}
+					std::cout << "Current Progress : "<< ++count << " finished.\t" << tr_vec.size() <<" threads\t\t"<<"\r";
+				}else
+				{
+					std::cout << "Current Progress : "<< count << " finished.\t" << tr_vec.size() <<" threads\t\t"<<"\r";
 				}
 			}
 		}
-		for (int i = 0; i < tr_vec.size(); i++) {
-			tr_vec.at(i).join();
+		for(int i=0;i<threadNum_;i++){
+			if(i!= last)
+				tr_vec.at(i).join();
 		}
+
+		
+		// while (std::getline(inStream, readLine)) {
+		// 	tr_vec.push_back(boost::thread(thr_func, readLine, outFile));
+		// 	if(tr_vec.size() < threadNum_) continue;
+		// 	bool b = false;
+		// 	while (true) {
+		// 		if (b == true || tr_vec.size() < threadNum_) {
+		// 			// std::cout << tr_vec.size()<<"\n"<<std::endl;
+		// 			break;
+		// 		}
+		// 		else {
+		// 			// flag = false;
+		// 			std::cout << "Current Progress : "<< count << " finished.\t" << tr_vec.size() <<" threads\t\t"<<"\r";
+		// 			// Wait for child thread's signal
+		// 			// std::unique_lock<std::mutex> lock(cond_var_mtx);
+		// 			// cond_var.wait_for(lock, std::chrono::seconds(100), []() { return flag; });
+		// 			boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+		// 		}
+		// 		for (int k = 0; k < tr_vec.size();) {
+		// 			if(k>=tr_vec.size()) break;
+		// 			if (tr_vec.at(k).joinable()) {
+		// 				tr_vec.at(k).join();
+		// 				tr_vec.erase(tr_vec.begin() + k);
+		// 				b = true;
+		// 				std::cout << "Current Progress : "<< ++count << " finished.\t" << tr_vec.size() <<" threads\t\t"<<"\r";
+		// 			}else
+		// 			{
+		// 				k++;
+		// 				std::cout << "Current Progress : "<< count << " finished.\t" << tr_vec.size() <<" threads\t\t"<<"\r";
+		// 			}
+		// 		}
+		// 	}
+		// }
+		// for (int i = 0; i < tr_vec.size(); i++) {
+		// 	tr_vec.at(i).join();
+		// }
 	}
 	catch (std::exception e) {
 		printf("ERROR: error encountered while reading input file");

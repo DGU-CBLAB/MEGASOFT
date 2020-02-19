@@ -1,4 +1,4 @@
-Arguments: ./MEGASOFT_LINUX.o --input ./TestData/inputMS.txt --pvalue_table ./TestData/HanEskinPvalueTable.txt --output ./TestData/posterior_c++_static.txt --log ./TestData/log_c++_static.txt --mvalue --mvalue_method mcmc --mcmc_sample 1000000 --seed 0 --mvalue_prior_sigma 0.05 --mvalue_prior_alpha 1 --mvalue_prior_beta 5 --mvalue_p_thres 1.0 --thread 4 
+Arguments: ./MEGASOFT_LINUX.o --input ./TestData/inputMS.txt --pvalue_table ./TestData/HanEskinPvalueTable.txt --output ./TestData/posterior_c++_static.txt --log ./TestData/log_c++_static.txt --mvalue --mcmc_sample 1000000 --seed 0 --mvalue_prior_sigma 0.05 --mvalue_prior_alpha 1 --mvalue_prior_beta 5 --mvalue_p_thres 1.0 --thread 1 
  Input File: ./TestData/inputMS.txt
 Output File: ./TestData/posterior_c++_static.txt
 Log File: ./TestData/log_c++_static.txt
@@ -9,4 +9,4 @@ Specified lambda for   mean effect part (default = 1.0): 1.000000
 Specified lambda for heterogeneity part (default = 1.0): 1.000000
 Newly calculated inflation factor lambda for   mean effect part: 41.934434
 Newly calculated inflation factor lambda for heterogeneity part: 32.277197
-Elapsed time : 9.100 minutes
+Elapsed time : 0.000 minutes
