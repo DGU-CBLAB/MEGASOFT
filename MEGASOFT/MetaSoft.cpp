@@ -330,10 +330,10 @@ void thr_func(std::string readLine, FILE* outFile) {
 	tokens.clear();
 
 	// Signal parent process(thread) to wake up
-	std::lock_guard<std::mutex> lock(cond_var_mtx);
-	flag = true;
-	cond_var.notify_one();
-	exit(1);
+	// std::lock_guard<std::mutex> lock(cond_var_mtx);
+	// flag = true;
+	// cond_var.notify_one();
+	// exit(1);
 }
 void doMetaAnalysis() {
 	srand(seed_);
@@ -371,22 +371,23 @@ void doMetaAnalysis() {
 					break;
 				}
 				else {
-					flag = false;
-					std::cout << "Current Progress : "<< count << " finished." <<"\r";
+					// flag = false;
+					std::cout << "Current Progress : "<< count << " finished.\t" << tr_vec.size() <<" threads\t\t"<<"\r";
 					// Wait for child thread's signal
-					std::unique_lock<std::mutex> lock(cond_var_mtx);
-					cond_var.wait_for(lock, std::chrono::seconds(100), []() { return flag; });
+					// std::unique_lock<std::mutex> lock(cond_var_mtx);
+					// cond_var.wait_for(lock, std::chrono::seconds(100), []() { return flag; });
+					boost::this_thread::sleep_for(boost::chrono::seconds(2));
 				}
 				for (int k = 0; k < tr_vec.size(); k++) {
 					if (tr_vec.at(k).joinable()) {
 						tr_vec.at(k).join();
 						tr_vec.erase(tr_vec.begin() + k);
 						b = true;
-						std::cout << "Current Progress : " << ++count << " finished." << "\r";
+						std::cout << "Current Progress : "<< ++count << " finished.\t" << tr_vec.size() <<" threads\t\t"<<"\r";
 						break;
 					}else
 					{
-						std::cout << "Current Progress : " << count << " finished." << "\r";
+						std::cout << "Current Progress : "<< count << " finished.\t" << tr_vec.size() <<" threads\t\t"<<"\r";
 					}
 					
 				}
