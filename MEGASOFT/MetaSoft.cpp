@@ -368,7 +368,7 @@ void doMetaAnalysis() {
 			bool b = false;
 			while (true) {
 				if (b == true || tr_vec.size() < threadNum_) {
-					std::cout << tr_vec.size()<<"\n"<<std::endl;
+					// std::cout << tr_vec.size()<<"\n"<<std::endl;
 					break;
 				}
 				else {
