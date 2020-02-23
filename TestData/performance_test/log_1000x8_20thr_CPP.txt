@@ -7,6 +7,6 @@ Number of SNPs analyzed: 1000
 Maximum number of studies: 8
 Specified lambda for   mean effect part (default = 1.0): 1.000000
 Specified lambda for heterogeneity part (default = 1.0): 1.000000
-Newly calculated inflation factor lambda for   mean effect part: 43.408043
-Newly calculated inflation factor lambda for heterogeneity part: 32.929645
-Elapsed time : 17.567 minutes
+Newly calculated inflation factor lambda for   mean effect part: 43.256859
+Newly calculated inflation factor lambda for heterogeneity part: 32.734361
+Elapsed time : 16.933 minutes

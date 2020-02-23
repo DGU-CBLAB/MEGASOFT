@@ -9,4 +9,4 @@ Specified lambda for   mean effect part (default = 1.0): 1.000000
 Specified lambda for heterogeneity part (default = 1.0): 1.000000
 Newly calculated inflation factor lambda for   mean effect part: 43.408043
 Newly calculated inflation factor lambda for heterogeneity part: 32.929645
-Elapsed time : 14.067 minutes
+Elapsed time : 14.033 minutes
