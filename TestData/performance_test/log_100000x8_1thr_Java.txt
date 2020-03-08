@@ -1,0 +1,11 @@
+Arguments:  -input ../../TestData/performance_test/inputMS_100000x8.txt -pvalue_table ../../TestData/HanEskinPvalueTable.txt -output ../../TestData/performance_test/posterior_100000x8_1thr_Java.txt -log ../../TestData/performance_test/log_100000x8_1thr_Java.txt -mvalue -mvalue_method mcmc -mcmc_sample 1000000 -seed 0 -mvalue_prior_sigma 0.05 -mvalue_prior_beta 1 5 -mvalue_p_thres 1.0
+ Input File: ../../TestData/performance_test/inputMS_100000x8.txt
+Output File: ../../TestData/performance_test/posterior_100000x8_1thr_Java.txt
+Log File: ../../TestData/performance_test/log_100000x8_1thr_Java.txt
+p-value Table File: ../../TestData/HanEskinPvalueTable.txt
+Number of SNPs analyzed: 100000
+Maximum number of studies: 8
+Specified lambda for   mean effect part (default = 1.0): 1.000000
+Specified lambda for heterogeneity part (default = 1.0): 1.000000
+Newly calculated inflation factor lambda for   mean effect part: 42.590927
+Newly calculated inflation factor lambda for heterogeneity part: 31.833695
