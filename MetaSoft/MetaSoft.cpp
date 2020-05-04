@@ -5,6 +5,11 @@
 #include <boost/thread/thread.hpp>
 namespace po = boost::program_options;
 
+struct{
+	std::string readLine;
+	FILE* outFile;
+	bool* done;
+}typedef thread_struct;
 // Multi-Thread variables
 static int threadNum_ = 1;
 //static std::mutex mtx;
@@ -231,7 +236,10 @@ void printErrorAndQuit(std::string msg) {
 	printf("%s\n",msg.c_str());
 	std::exit(-1);
 }
-void thr_func(std::string readLine, FILE* outFile) {
+void* thr_func(void* args){//std::string readLine, FILE* outFile) {
+	thread_struct* thr_args = (thread_struct*)args;
+	std::string readLine = thr_args->readLine;
+	FILE* outFile = thr_args->outFile;
 	MetaSnp* metaSnp;    // Store only 1 Snp at a time in memory.
 	std::vector<std::string> tokens;
 	split(tokens, readLine, " ");
@@ -322,6 +330,9 @@ void thr_func(std::string readLine, FILE* outFile) {
 		}
 	}
 	tokens.clear();
+
+	// Joinable
+	*(thr_args->done) = true;
 }
 void doMetaAnalysis() {
 	srand(seed_);
@@ -349,12 +360,26 @@ void doMetaAnalysis() {
 	try {
 		std::ifstream inStream(inputFile_);
 		std::string readLine;
-		int count = 0;
+		int count = 0, err=0;
 		//std::vector<std::thread> tr_vec;
-		std::vector <boost::thread> tr_vec;
+		std::vector <std::pair<pthread_t*, bool*>> tr_vec;
 		while (std::getline(inStream, readLine)) {
 			// std::cout << tr_vec.size() << std::endl;
-			tr_vec.push_back(boost::thread(thr_func, readLine, outFile));
+			pthread_t* thr_t = new pthread_t();
+			thread_struct* args = new thread_struct();
+			bool* done = new bool(false);
+			args->readLine = readLine;
+			args->outFile = outFile;
+			args->done = done;
+			
+			err = pthread_create(thr_t, NULL, &thr_func, args);
+			if(err != 0){
+				printf("\ncan't create thread :[%s]", strerror(err));
+				exit(ERR_THREAD_CREATE);
+			}
+			tr_vec.push_back(std::make_pair(thr_t, done));
+
+			//tr_vec.push_back(boost::thread(thr_func, readLine, outFile));
 			bool b = false;
 			while (true) {
 				if (b == true || tr_vec.size() < threadNum_) {
@@ -367,8 +392,12 @@ void doMetaAnalysis() {
 					// std::this_thread::sleep_for(std::chrono::seconds(1));
 				}
 				for (int k = 0; k < tr_vec.size(); k++) {
-					if (tr_vec.at(k).joinable()) {
-						tr_vec.at(k).join();
+					if (*tr_vec.at(k).second == true) {
+						int err_res = pthread_join(*(pthread_t*)tr_vec.at(k).first, NULL);
+						if(err_res != 0){
+							printf("\ncan't join thread :[%s]", strerror(err));
+							exit(ERR_THREAD_JOIN);
+						}
 						tr_vec.erase(tr_vec.begin() + k);
 						b = true;
 						std::cout << "Current Progress : " << ++count << " finished." << "\r";
@@ -382,7 +411,11 @@ void doMetaAnalysis() {
 			}
 		}
 		for (int i = 0; i < tr_vec.size(); i++) {
-			tr_vec.at(i).join();
+			int err_res = pthread_join(*(pthread_t*)tr_vec.at(i).first, NULL);
+			if(err_res != 0){
+				printf("\ncan't join thread :[%s]", strerror(err));
+				exit(ERR_THREAD_JOIN);
+			}
 		}
 	}
 	catch (std::exception e) {
