@@ -389,7 +389,7 @@ void doMetaAnalysis() {
 					std::cout << "Current Progress : "<< count << " finished." <<"\r";
 					// boost::this_thread::sleep_for(boost::chrono::nanoseconds(1));
 					// boost::this_thread::sleep_for(boost::chrono::seconds(1));
-					// std::this_thread::sleep_for(std::chrono::seconds(1));
+					std::this_thread::sleep_for(std::chrono::microseconds(100));
 				}
 				for (int k = 0; k < tr_vec.size(); k++) {
 					if (*tr_vec.at(k).second == true) {
@@ -404,7 +404,7 @@ void doMetaAnalysis() {
 						break;
 					}else
 					{
-						std::cout << "Current Progress : " << count << " finished." << "\r";
+						// std::cout << "Current Progress : " << count << " finished." << "\r";
 					}
 					
 				}
