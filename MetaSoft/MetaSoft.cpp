@@ -361,10 +361,9 @@ void doMetaAnalysis() {
 		std::ifstream inStream(inputFile_);
 		std::string readLine;
 		int count = 0, err=0;
-		//std::vector<std::thread> tr_vec;
 		std::vector <std::pair<pthread_t*, bool*>> tr_vec;
+		
 		while (std::getline(inStream, readLine)) {
-			// std::cout << tr_vec.size() << std::endl;
 			pthread_t* thr_t = new pthread_t();
 			thread_struct* args = new thread_struct();
 			bool* done = new bool(false);
@@ -379,20 +378,15 @@ void doMetaAnalysis() {
 			}
 			tr_vec.push_back(std::make_pair(thr_t, done));
 
-			//tr_vec.push_back(boost::thread(thr_func, readLine, outFile));
 			bool b = false;
 			while (true) {
 				if (b == true || tr_vec.size() < threadNum_) {
 					break;
 				}
-				else {
-					std::cout << "Current Progress : "<< count << " finished." <<"\r";
-					// boost::this_thread::sleep_for(boost::chrono::nanoseconds(1));
-					// boost::this_thread::sleep_for(boost::chrono::seconds(1));
-					std::this_thread::sleep_for(std::chrono::microseconds(100));
-				}
+				
+				bool skip_wait = false;
 				for (int k = 0; k < tr_vec.size(); k++) {
-					if (*tr_vec.at(k).second == true) {
+					if (*(tr_vec.at(k).second) == true) {
 						int err_res = pthread_join(*(pthread_t*)tr_vec.at(k).first, NULL);
 						if(err_res != 0){
 							printf("\ncan't join thread :[%s]", strerror(err));
@@ -400,16 +394,19 @@ void doMetaAnalysis() {
 						}
 						tr_vec.erase(tr_vec.begin() + k);
 						b = true;
+						skip_wait = true;
 						std::cout << "Current Progress : " << ++count << " finished." << "\r";
 						break;
-					}else
-					{
-						// std::cout << "Current Progress : " << count << " finished." << "\r";
 					}
-					
+				}
+				if(!skip_wait){
+					// boost::this_thread::sleep_for(boost::chrono::nanoseconds(1));
+					// boost::this_thread::sleep_for(boost::chrono::seconds(1));
+					std::cout << "Current Progress : " << count << " finished." << "\r";
+					std::this_thread::sleep_for(std::chrono::microseconds(100));
 				}
 			}
-		}
+		} // end of while(getline)
 		for (int i = 0; i < tr_vec.size(); i++) {
 			int err_res = pthread_join(*(pthread_t*)tr_vec.at(i).first, NULL);
 			if(err_res != 0){
