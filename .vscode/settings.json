@@ -1,5 +1,6 @@
 {
     "files.associations": {
+<<<<<<< HEAD
         "iostream": "cpp",
         "cctype": "cpp",
         "clocale": "cpp",
@@ -60,5 +61,8 @@
         "set": "cpp",
         "string": "cpp",
         "string_view": "cpp"
+=======
+        "chrono": "cpp"
+>>>>>>> Linux
     }
 }

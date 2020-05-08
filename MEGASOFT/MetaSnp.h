@@ -21,9 +21,12 @@
 #include<boost/math/distributions/beta.hpp>
 #include<boost/math/distributions/find_location.hpp>
 #include<boost/math/distributions.hpp>
-#define M_PI acos(-1.0) // Accurate PI constant
+//#define M_PI acos(-1.0) // Accurate PI constant
 #define NORMAL_EXECUTION 1
 #define ABNORMAL_EXECUTION -1
+
+#define ERR_THREAD_CREATE 100
+#define ERR_THREAD_JOIN 101
 // Statistical functions
 class map_tuple {
 public:

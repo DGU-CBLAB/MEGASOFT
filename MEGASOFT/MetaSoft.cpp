@@ -7,6 +7,11 @@
 #include<condition_variable>
 namespace po = boost::program_options;
 
+struct{
+	std::string readLine;
+	FILE* outFile;
+	bool* done;
+}typedef thread_struct;
 // Multi-Thread variables
 static int threadNum_ = 1;
 //static std::mutex mtx;
@@ -236,8 +241,10 @@ void printErrorAndQuit(std::string msg) {
 	printf("%s\n",msg.c_str());
 	std::exit(-1);
 }
-void thr_func(std::string readLine, FILE* outFile) {
-	srand(seed_);
+void* thr_func(void* args){//std::string readLine, FILE* outFile) {
+	thread_struct* thr_args = (thread_struct*)args;
+	std::string readLine = thr_args->readLine;
+	FILE* outFile = thr_args->outFile;
 	MetaSnp* metaSnp;    // Store only 1 Snp at a time in memory.
 	std::vector<std::string> tokens;
 	split(tokens, readLine, " ");
@@ -329,11 +336,8 @@ void thr_func(std::string readLine, FILE* outFile) {
 	}
 	tokens.clear();
 
-	// Signal parent process(thread) to wake up
-	// std::lock_guard<std::mutex> lock(cond_var_mtx);
-	// flag = true;
-	// cond_var.notify_one();
-	// exit(1);
+	// Joinable
+	*(thr_args->done) = true;
 }
 void doMetaAnalysis() {
 	srand(seed_);
@@ -361,40 +365,59 @@ void doMetaAnalysis() {
 	try {
 		std::ifstream inStream(inputFile_);
 		std::string readLine;
-		int count = 0;
-		std::vector <boost::thread> tr_vec;
-		tr_vec.resize(threadNum_);
-		for(int i =0;i<threadNum_;i++){
-			if(std::getline(inStream, readLine))
-				tr_vec.at(i) = boost::thread(thr_func, readLine, outFile);
-			else
-			{
-				break;
-			}
+		int count = 0, err=0;
+		std::vector <std::pair<pthread_t*, bool*>> tr_vec;
+		
+		while (std::getline(inStream, readLine)) {
+			pthread_t* thr_t = new pthread_t();
+			thread_struct* args = new thread_struct();
+			bool* done = new bool(false);
+			args->readLine = readLine;
+			args->outFile = outFile;
+			args->done = done;
 			
-		}
-		bool clear_all = false;
-		int last;
-		while(!clear_all){
-			for(int i =0;i<threadNum_;i++){
-				if (tr_vec.at(i).joinable()) {
-					tr_vec.at(i).join();
-					if(std::getline(inStream, readLine)){
-						tr_vec.at(i) = boost::thread(thr_func, readLine, outFile);
-					}else{
-						last = i;
-						clear_all = true;
+			err = pthread_create(thr_t, NULL, &thr_func, args);
+			if(err != 0){
+				printf("\ncan't create thread :[%s]", strerror(err));
+				exit(ERR_THREAD_CREATE);
+			}
+			tr_vec.push_back(std::make_pair(thr_t, done));
+
+			bool b = false;
+			while (true) {
+				if (b == true || tr_vec.size() < threadNum_) {
+					break;
+				}
+				
+				bool skip_wait = false;
+				for (int k = 0; k < tr_vec.size(); k++) {
+					if (*(tr_vec.at(k).second) == true) {
+						int err_res = pthread_join(*(pthread_t*)tr_vec.at(k).first, NULL);
+						if(err_res != 0){
+							printf("\ncan't join thread :[%s]", strerror(err));
+							exit(ERR_THREAD_JOIN);
+						}
+						tr_vec.erase(tr_vec.begin() + k);
+						b = true;
+						skip_wait = true;
+						std::cout << "Current Progress : " << ++count << " finished." << "\r";
+						break;
 					}
-					std::cout << "Current Progress : "<< ++count << " finished.\t" << tr_vec.size() <<" threads\t\t"<<"\r";
-				}else
-				{
-					std::cout << "Current Progress : "<< count << " finished.\t" << tr_vec.size() <<" threads\t\t"<<"\r";
+				}
+				if(!skip_wait){
+					// boost::this_thread::sleep_for(boost::chrono::nanoseconds(1));
+					// boost::this_thread::sleep_for(boost::chrono::seconds(1));
+					std::cout << "Current Progress : " << count << " finished." << "\r";
+					std::this_thread::sleep_for(std::chrono::microseconds(100));
 				}
 			}
-		}
-		for(int i=0;i<threadNum_;i++){
-			if(i!= last)
-				tr_vec.at(i).join();
+		} // end of while(getline)
+		for (int i = 0; i < tr_vec.size(); i++) {
+			int err_res = pthread_join(*(pthread_t*)tr_vec.at(i).first, NULL);
+			if(err_res != 0){
+				printf("\ncan't join thread :[%s]", strerror(err));
+				exit(ERR_THREAD_JOIN);
+			}
 		}
 
 		
