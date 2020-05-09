@@ -408,7 +408,7 @@ void doMetaAnalysis() {
 					// boost::this_thread::sleep_for(boost::chrono::nanoseconds(1));
 					// boost::this_thread::sleep_for(boost::chrono::seconds(1));
 					std::cout << "Current Progress : " << count << " finished." << "\r";
-					std::this_thread::sleep_for(std::chrono::microseconds(100));
+					//std::this_thread::sleep_for(std::chrono::microseconds(100));
 				}
 			}
 		} // end of while(getline)
