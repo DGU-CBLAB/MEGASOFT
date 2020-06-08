@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Resource Files\Java">
+      <UniqueIdentifier>{58a2c62f-aac0-4a40-b55c-ab25a649bf12}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MetaSnp.cpp">
@@ -26,5 +29,27 @@
     <ClInclude Include="MetaSnp.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\TestData\inputMS.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="..\TestData\posterior_windows_c++_static.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="..\TestData\posterior_windows_java.txt">
+      <Filter>Resource Files\Java</Filter>
+    </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\.gitignore">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\TEST_CMD_WIN64.sh">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\TEST_CMD_WIN_JAVA.sh">
+      <Filter>Resource Files\Java</Filter>
+    </None>
   </ItemGroup>
 </Project>

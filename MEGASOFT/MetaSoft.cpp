@@ -164,6 +164,9 @@ void handleArguments(int argc, char* argv[]) {
 	}
 	if (vm.count("thread")) {
 		threadNum_ = vm["thread"].as<int>();
+#ifdef FORCE_THREAD
+		threadNum_ = THREAD;
+#endif
 	}
 	if (vm.count("help")) {
 		std::cout << "------------------------------------------------"<< std::endl;
@@ -366,21 +369,33 @@ void doMetaAnalysis() {
 		std::ifstream inStream(inputFile_);
 		std::string readLine;
 		int count = 0, err=0;
+#ifdef LINUX
 		std::vector <std::pair<pthread_t*, bool*>> tr_vec;
+#elif WINDOWS
+		std::vector<std::pair<std::thread*, bool*>> tr_vec;
+#endif
 		
 		while (std::getline(inStream, readLine)) {
+
+#ifdef LINUX
 			pthread_t* thr_t = new pthread_t();
+#elif WINDOWS
+			std::thread* thr_t;
+#endif
 			thread_struct* args = new thread_struct();
 			bool* done = new bool(false);
 			args->readLine = readLine;
 			args->outFile = outFile;
 			args->done = done;
-			
+#ifdef LINUX	
 			err = pthread_create(thr_t, NULL, &thr_func, args);
 			if(err != 0){
 				printf("\ncan't create thread :[%s]", strerror(err));
 				exit(ERR_THREAD_CREATE);
 			}
+#elif WINDOWS
+			thr_t = new std::thread(thr_func, args);
+#endif
 			tr_vec.push_back(std::make_pair(thr_t, done));
 
 			bool b = false;
@@ -392,11 +407,15 @@ void doMetaAnalysis() {
 				bool skip_wait = false;
 				for (int k = 0; k < tr_vec.size(); k++) {
 					if (*(tr_vec.at(k).second) == true) {
+#ifdef LINUX
 						int err_res = pthread_join(*(pthread_t*)tr_vec.at(k).first, NULL);
 						if(err_res != 0){
 							printf("\ncan't join thread :[%s]", strerror(err));
 							exit(ERR_THREAD_JOIN);
 						}
+#elif WINDOWS
+						tr_vec.at(k).first->join();
+#endif
 						tr_vec.erase(tr_vec.begin() + k);
 						b = true;
 						skip_wait = true;
@@ -413,49 +432,17 @@ void doMetaAnalysis() {
 			}
 		} // end of while(getline)
 		for (int i = 0; i < tr_vec.size(); i++) {
+#ifdef LINUX
 			int err_res = pthread_join(*(pthread_t*)tr_vec.at(i).first, NULL);
 			if(err_res != 0){
 				printf("\ncan't join thread :[%s]", strerror(err));
 				exit(ERR_THREAD_JOIN);
 			}
+#elif WINDOWS
+			tr_vec.at(i).first->join();
+#endif
 		}
 
-		
-		// while (std::getline(inStream, readLine)) {
-		// 	tr_vec.push_back(boost::thread(thr_func, readLine, outFile));
-		// 	if(tr_vec.size() < threadNum_) continue;
-		// 	bool b = false;
-		// 	while (true) {
-		// 		if (b == true || tr_vec.size() < threadNum_) {
-		// 			// std::cout << tr_vec.size()<<"\n"<<std::endl;
-		// 			break;
-		// 		}
-		// 		else {
-		// 			// flag = false;
-		// 			std::cout << "Current Progress : "<< count << " finished.\t" << tr_vec.size() <<" threads\t\t"<<"\r";
-		// 			// Wait for child thread's signal
-		// 			// std::unique_lock<std::mutex> lock(cond_var_mtx);
-		// 			// cond_var.wait_for(lock, std::chrono::seconds(100), []() { return flag; });
-		// 			boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
-		// 		}
-		// 		for (int k = 0; k < tr_vec.size();) {
-		// 			if(k>=tr_vec.size()) break;
-		// 			if (tr_vec.at(k).joinable()) {
-		// 				tr_vec.at(k).join();
-		// 				tr_vec.erase(tr_vec.begin() + k);
-		// 				b = true;
-		// 				std::cout << "Current Progress : "<< ++count << " finished.\t" << tr_vec.size() <<" threads\t\t"<<"\r";
-		// 			}else
-		// 			{
-		// 				k++;
-		// 				std::cout << "Current Progress : "<< count << " finished.\t" << tr_vec.size() <<" threads\t\t"<<"\r";
-		// 			}
-		// 		}
-		// 	}
-		// }
-		// for (int i = 0; i < tr_vec.size(); i++) {
-		// 	tr_vec.at(i).join();
-		// }
 	}
 	catch (std::exception e) {
 		printf("ERROR: error encountered while reading input file");

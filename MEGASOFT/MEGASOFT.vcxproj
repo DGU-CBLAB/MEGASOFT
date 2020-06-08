@@ -25,6 +25,16 @@
   <ItemGroup>
     <ClInclude Include="MetaSnp.h" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\TestData\inputMS.txt" />
+    <Text Include="..\TestData\posterior_windows_c++_static.txt" />
+    <Text Include="..\TestData\posterior_windows_java.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\.gitignore" />
+    <None Include="..\TEST_CMD_WIN_JAVA.sh" />
+    <None Include="..\TEST_CMD_WIN64.sh" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{60AFB523-7D2D-418E-85AA-5D7809745689}</ProjectGuid>
@@ -79,15 +89,23 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>C:\boost_1_72_0\stage\include\boost-1_72\;$(IncludePath)</IncludePath>
+    <IntDir>..</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>C:\boost_1_72_0\stage\include\boost-1_72\;$(IncludePath)</IncludePath>
+    <IntDir>..</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>C:\boost_1_72_0\stage\include\boost-1_72\;$(IncludePath)</IncludePath>
+    <IntDir>..</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>C:\boost_1_72_0\stage\include\boost-1_72\;$(IncludePath)</IncludePath>
+    <IntDir>..</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

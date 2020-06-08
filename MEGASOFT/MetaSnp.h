@@ -1,6 +1,18 @@
+
 #ifdef _MSC_VER
-#define _CRT_SECURE_NO_WARNINGS
+	#define _CRT_SECURE_NO_WARNINGS
+	#define WINDOWS 1
+#else 
+	#define LINUX 1
 #endif
+#ifdef _DEBUG 
+	#define FORCE_THREAD 1
+	#define THREAD 5
+#else
+	#define FORCE_THREAD 1
+	#define THREAD 20
+#endif
+
 #include<iostream>
 #include<stdio.h>
 #include<sstream>
@@ -21,12 +33,16 @@
 #include<boost/math/distributions/beta.hpp>
 #include<boost/math/distributions/find_location.hpp>
 #include<boost/math/distributions.hpp>
-//#define M_PI acos(-1.0) // Accurate PI constant
+
+#ifdef WINDOWS
+	#define M_PI acos(-1.0) // Accurate PI constant
+#endif
 #define NORMAL_EXECUTION 1
 #define ABNORMAL_EXECUTION -1
 
 #define ERR_THREAD_CREATE 100
 #define ERR_THREAD_JOIN 101
+
 // Statistical functions
 class map_tuple {
 public:

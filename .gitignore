@@ -1,0 +1,11 @@
+#WINDOWS gitignore
+./.vs/
+x64/
+MEGASOFT.tlog/
+.vs/
+MEGASOFT.log
+MetaSnp.obj
+MetaSoft.obj
+vc142.pdb
+
+#LINUX gitignore
