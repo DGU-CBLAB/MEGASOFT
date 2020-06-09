@@ -9,3 +9,4 @@ MetaSoft.obj
 vc142.pdb
 
 #LINUX gitignore
+vcpkg.applocal.log

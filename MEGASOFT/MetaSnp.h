@@ -5,13 +5,30 @@
 #else 
 	#define LINUX 1
 #endif
+
+/*
+FORCE_THREAD
+2 or higher - force thread number
+1 or less- default(use argument thread number)
+*/
 #ifdef _DEBUG 
 	#define FORCE_THREAD 1
 	#define THREAD 5
 #else
 	#define FORCE_THREAD 1
-	#define THREAD 20
+	#define THREAD 4
 #endif
+
+#define ERROR_IO 100
+#define ERROR_IO_FILE_CLOSE 101
+#define ERROR_THREAD_CREATE 200
+#define ERROR_THREAD_JOIN 201
+#define ERROR_META_ANALYSIS 300
+
+#define DONE_NORMAL 1
+#define DONE_ABNORMAL -1
+#define ERR_THREAD_CREATE 100
+#define ERR_THREAD_JOIN 101
 
 #include<iostream>
 #include<stdio.h>
@@ -37,11 +54,6 @@
 #ifdef WINDOWS
 	#define M_PI acos(-1.0) // Accurate PI constant
 #endif
-#define NORMAL_EXECUTION 1
-#define ABNORMAL_EXECUTION -1
-
-#define ERR_THREAD_CREATE 100
-#define ERR_THREAD_JOIN 101
 
 // Statistical functions
 class map_tuple {

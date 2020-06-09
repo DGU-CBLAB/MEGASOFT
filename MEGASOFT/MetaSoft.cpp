@@ -8,17 +8,20 @@
 namespace po = boost::program_options;
 
 struct{
-	std::string readLine;
+	std::vector<std::string> lines;
 	FILE* outFile;
-	bool* done;
+	unsigned int* done_count_ptr;
 }typedef thread_struct;
+
 // Multi-Thread variables
 static int threadNum_ = 1;
-//static std::mutex mtx;
+
 static boost::mutex mtx;
+static boost::mutex done_mtx;
 static std::mutex cond_var_mtx;
 static std::condition_variable cond_var;
 static bool flag = false;
+
 // Arguments and default values
 static std::string  inputFile_ = "";
 static std::string  outputFile_ = "out";
@@ -42,6 +45,7 @@ static long    binaryEffectsLargeSample_ = 100000;
 static double  binaryEffectsPvalueThreshold_ = 1E-4;
 static unsigned int     seed_ = 0;
 static bool isVerbose_ = false;
+
 // Internally used variables
 static int    numSnps_;
 static int    maxNumStudy_;
@@ -56,7 +60,8 @@ const double expectedMedianHanEskinHeterogeneityPart_[] = // from nStudy 2 to 50
 
 void printErrorAndQuit(std::string msg);
 
-void handleArguments(int argc, char* argv[]) {
+void handleArguments(int argc, char* argv[]) 
+{
 	boost::program_options::options_description desc("Allowed Options");
 	desc.add_options()
 		("help", "Print help")
@@ -89,86 +94,112 @@ void handleArguments(int argc, char* argv[]) {
 	po::store(po::parse_command_line(argc, argv, desc), vm);
 	
 
-	if (vm.count("help")) {
+	if (vm.count("help")) 
+	{
 		std::cout << desc << std::endl;
 		std::exit(1);
 	}
-	if (vm.count("input")) {
+	if (vm.count("input")) 
+	{
 		inputFile_ = vm["input"].as<std::string>();
 	}
 	
-	if (vm.count("output")) {
+	if (vm.count("output")) 
+	{
 		outputFile_ = vm["output"].as<std::string>();
 	}
-	if (vm.count("pvalue_table")) {
+	if (vm.count("pvalue_table")) 
+	{
 		pvalueTableFile_ = vm["pvalue_table"].as<std::string>();
 	}
-	if (vm.count("log")) {
+	if (vm.count("log")) 
+	{
 		logFile_ = vm["log"].as<std::string>();
 	}
-	if (vm.count("lambda_mean")) {
+	if (vm.count("lambda_mean")) 
+	{
 		inputLambdaMeanEffect_ = vm["lambda_mean"].as<double>();
 	}
-	if (vm.count("lambda_hetero")) {
+	if (vm.count("lambda_hetero")) 
+	{
 		inputLambdaHeterogeneity_ = vm["lambda_hetero"].as<double>();
 	}
-	if (vm.count("mvalue")) {
+	if (vm.count("mvalue")) 
+	{
 		willComputeMvalue_ = true;
-		if (vm.count("mvalue_prior_sigma")) {
+		if (vm.count("mvalue_prior_sigma")) 
+		{
 			priorSigma_ = vm["mvalue_prior_sigma"].as<double>();
 		}
-		if (vm.count("mvalue_prior_alpha")) {
+		if (vm.count("mvalue_prior_alpha")) 
+		{
 			priorAlpha_ = stod(vm["mvalue_prior_alpha"].as<std::string>());
 		}
-		if (vm.count("mvalue_prior_beta")) {
+		if (vm.count("mvalue_prior_beta")) 
+		{
 			priorBeta_ = stod(vm["mvalue_prior_beta"].as<std::string>());
 		}
-		if (vm.count("mvalue_p_thres")) {
+		if (vm.count("mvalue_p_thres")) 
+		{
 			mvaluePvalueThreshold_ = vm["mvalue_p_thres"].as<double>();
 		}
-		if (vm.count("mvalue_method")) {
+		if (vm.count("mvalue_method")) 
+		{
 			mvalueMethod_ = vm["mvalue_method"].as<std::string>();
 		}
-		if (mvalueMethod_ == "mcmc") {
-			if (vm.count("mcmc_sample")) {
+		if (mvalueMethod_ == "mcmc") 
+		{
+			if (vm.count("mcmc_sample")) 
+			{
 				mcmcSample_ = vm["mcmc_sample"].as<long>();
 			}
-			if (vm.count("mcmc_burnin")) {
+			if (vm.count("mcmc_burnin")) 
+			{
 				mcmcBurnin_ = vm["mcmc_burnin"].as<long>();
 			}
-			if (vm.count("mcmc_prob_random_move")) {
+			if (vm.count("mcmc_prob_random_move")) 
+			{
 				mcmcProbRandom_ = vm["mcmc_prob_random_move"].as<double>();
 			}
-			if (vm.count("mcmc_max_num_flip")) {
+			if (vm.count("mcmc_max_num_flip")) 
+			{
 				mcmcMaxNumFlip_ = vm["mcmc_max_num_flip"].as<double>();
 			}
 		}
 	}
-	if (vm.count("binary_effects")) {
+	if (vm.count("binary_effects")) 
+	{
 		willComputeBinaryEffects_ = true;
-		if (vm.count("binary_effects_sample")) {
+		if (vm.count("binary_effects_sample")) 
+		{
 			binaryEffectsSample_ = vm["binary_effects_sample"].as<long>();
 		}
-		if (vm.count("binary_effects_large")) {
+		if (vm.count("binary_effects_large")) 
+		{
 			binaryEffectsLargeSample_ = vm["binary_effects_large"].as<long>();
 		}
-		if (vm.count("binary_effects_p_thres")) {
+		if (vm.count("binary_effects_p_thres")) 
+		{
 			binaryEffectsPvalueThreshold_ = vm["binary_effects_p_thres"].as<double>();
 		}
 	}
-	if (vm.count("seed")) {
+	if (vm.count("seed")) 
+	{
 		seed_ = vm["seed"].as<int>();
 	}
-	if (vm["verbose"].as<bool>() == true) {
+	if (vm["verbose"].as<bool>() == true) 
+	{
 		isVerbose_ = true;
 	}
-	if (vm.count("thread")) {
+	if (vm.count("thread")) 
+	{
 		threadNum_ = vm["thread"].as<int>();
 #ifdef FORCE_THREAD
 		threadNum_ = THREAD;
 #endif
 	}
-	if (vm.count("help")) {
+	if (vm.count("help")) 
+	{
 		std::cout << "------------------------------------------------"<< std::endl;
 		std::cout << "The format of input_file:" << std::endl;
 		std::cout << "  Each row is each SNP." << std::endl;
@@ -184,165 +215,214 @@ void handleArguments(int argc, char* argv[]) {
 
 
 	std::cout << "-------- Processing arguments ---------" << std::endl;
-	if (inputFile_ == "") {
+	if (inputFile_ == "") 
+	{
 		printErrorAndQuit("A valid input file must be specified using option -input");
 	}
-	if (inputLambdaMeanEffect_ <= 0.0) {
+	if (inputLambdaMeanEffect_ <= 0.0) 
+	{
 		printErrorAndQuit("lambda_mean option takes a float value > 0");
 	}
-	if (inputLambdaHeterogeneity_ <= 0.0) {
+	if (inputLambdaHeterogeneity_ <= 0.0) 
+	{
 		printErrorAndQuit("lambda_hetero option takes a float value > 0");
 	}
-	if (priorSigma_ <= 0.0) {
+	if (priorSigma_ <= 0.0) 
+	{
 		printErrorAndQuit("mvalue_prior_sigma option takes a float value > 0");
 	}
-	if (priorAlpha_ <= 0.0 || priorBeta_ <= 0.0) {
+	if (priorAlpha_ <= 0.0 || priorBeta_ <= 0.0) 
+	{
 		printErrorAndQuit("mvalue_prior_beta option takes two float values > 0");
 	}
-	if (mvaluePvalueThreshold_ < 0.0 || mvaluePvalueThreshold_ > 1.0) {
+	if (mvaluePvalueThreshold_ < 0.0 || mvaluePvalueThreshold_ > 1.0) 
+	{
 		printErrorAndQuit("mvalue_p_thres takes a float value between 0 and 1");
 	}
 	if (mvalueMethod_ != "exact" &&
 		mvalueMethod_ != "mcmc" &&
-		mvalueMethod_ != "variational") {
+		mvalueMethod_ != "variational") 
+	{
 		printErrorAndQuit("mvalue_method option only takes a value 'exact' or 'mcmc'");
 	}
-	if (mcmcSample_ < 1) {
+	if (mcmcSample_ < 1) 
+	{
 		printErrorAndQuit("mcmc_sample option takes an integer value > 0");
 	}
-	if (mcmcBurnin_ < 1) {
+	if (mcmcBurnin_ < 1) 
+	{
 		printErrorAndQuit("mcmc_burnin option takes an integer value > 0");
 	}
-	if (mcmcSample_ < mcmcBurnin_) {
+	if (mcmcSample_ < mcmcBurnin_) 
+	{
 		printErrorAndQuit("mcmc_sample must be larger than mcmc_burnin");
 	}
-	if (mcmcProbRandom_ < 0.0 || mcmcProbRandom_ > 1.0) {
+	if (mcmcProbRandom_ < 0.0 || mcmcProbRandom_ > 1.0) 
+	{
 		printErrorAndQuit("mcmc_prob_random takes a float value between 0 and 1");
 	}
-	if (mcmcMaxNumFlip_ <= 0.0) {
+	if (mcmcMaxNumFlip_ <= 0.0) 
+	{
 		printErrorAndQuit("mcmc_max_num_flip takes a value > 0");
 	}
-	if (binaryEffectsSample_ < 1) {
+	if (binaryEffectsSample_ < 1) 
+	{
 		printErrorAndQuit("binary_effects_sample option takes an integer value > 0");
 	}
-	if (binaryEffectsLargeSample_ < 1) {
+	if (binaryEffectsLargeSample_ < 1) 
+	{
 		printErrorAndQuit("binary_effects_large option takes an integer value > 0");
 	}
-	if (binaryEffectsPvalueThreshold_ < 0.0 || binaryEffectsPvalueThreshold_ > 1.0) {
+	if (binaryEffectsPvalueThreshold_ < 0.0 || binaryEffectsPvalueThreshold_ > 1.0) 
+	{
 		printErrorAndQuit("binary_effects_p_thres takes a float value between 0 and 1");
 	}
+	
 	// Make summary for printing
 	
 	argsSummary_ = "";
-	for (int i = 0; i < argc;i++) {
+	for (int i = 0; i < argc;i++) 
+	{
 		argsSummary_ += std::string(argv[i]) + " ";
 	}
 	argsSummary_ += "\n";
 }
 
-void printErrorAndQuit(std::string msg) {
+void printErrorAndQuit(std::string msg) 
+{
 	printf("%s\n",msg.c_str());
 	std::exit(-1);
 }
-void* thr_func(void* args){//std::string readLine, FILE* outFile) {
+void* thr_func(void* args)
+{
 	thread_struct* thr_args = (thread_struct*)args;
-	std::string readLine = thr_args->readLine;
+	std::vector<std::string> LINES = thr_args->lines;
 	FILE* outFile = thr_args->outFile;
 	MetaSnp* metaSnp;    // Store only 1 Snp at a time in memory.
-	std::vector<std::string> tokens;
-	split(tokens, readLine, " ");
-	if (tokens.size() > 1) {             // only if non-empty
-		if (tokens.at(0).at(0) != '#') { // only if non-comment
-			std::string rsid = tokens.at(0);
-			metaSnp = new MetaSnp(rsid);
-			if (tokens.size() % 2 == 0)
-				printf("WARNING: # of Columns must be odd including Rsid. Last column is ignored.");
-			int nStudy = (int)((tokens.size() - 1) / 2);
-			if (nStudy > maxNumStudy_) {
-				maxNumStudy_ = nStudy;
-			}
-			for (int i = 0; i < nStudy; i++) {
-				double beta;
-				double standardError;
-				if (tokens.at((2.0 * i) + 1.0).compare("NA") == 0 ||
-					tokens.at((2.0 * i) + 1.0).compare("N/A") == 0 ||
-					tokens.at((2.0 * i) + 1.0).compare("NA") == 0 ||
-					tokens.at((2.0 * i) + 1.0).compare("N/A") == 0) {
-					metaSnp->addNaStudy();
+
+	for (std::string line : LINES)
+	{
+		std::vector<std::string> tokens;
+		split(tokens, line, " ");
+		if (tokens.size() > 1) 
+		{             // only if non-empty
+			if (tokens.at(0).at(0) != '#') 
+			{ // only if non-comment
+				std::string rsid = tokens.at(0);
+				metaSnp = new MetaSnp(rsid);
+				if (tokens.size() % 2 == 0)
+				{
+					printf("WARNING: # of Columns must be odd including Rsid. Last column is ignored.");
 				}
-				else {
-					try {
-						beta = stod(tokens.at((2.0 * i) + 1.0));
-						standardError = stod(tokens.at(2.0 * i + 2.0));
-						if (standardError <= 0.0) {
-							printf("Standard error cannot be <= zero (%f th column is %f) in the following line.\n",
-								2.0 * i + 3.0, standardError);
-							printf("%s", readLine.c_str());
+
+				int nStudy = (int)((tokens.size() - 1) / 2);
+				if (nStudy > maxNumStudy_) 
+				{
+					maxNumStudy_ = nStudy;
+				}
+
+				for (int i = 0; i < nStudy; i++) 
+				{
+					double beta;
+					double standardError;
+					if (tokens.at((2.0 * i) + 1.0).compare("NA") == 0 ||
+						tokens.at((2.0 * i) + 1.0).compare("N/A") == 0 ||
+						tokens.at((2.0 * i) + 1.0).compare("NA") == 0 ||
+						tokens.at((2.0 * i) + 1.0).compare("N/A") == 0) 
+					{
+						metaSnp->addNaStudy();
+					}
+					else 
+					{
+						try {
+							beta = stod(tokens.at((2.0 * i) + 1.0));
+							standardError = stod(tokens.at(2.0 * i + 2.0));
+							if (standardError <= 0.0) 
+							{
+								printf("Standard error cannot be <= zero (%f th column is %f) in the following line.\n",
+									2.0 * i + 3.0, standardError);
+								printf("%s", line.c_str());
+								std::exit(-1);
+							}
+							metaSnp->addStudy(beta, standardError);
+						}
+						catch (std::exception es) 
+						{
+							printf("Incorrect float value in following line. Possibly not a double");
+							printf("%s", line.c_str());
 							std::exit(-1);
 						}
-						metaSnp->addStudy(beta, standardError);
-					}
-					catch (std::exception es) {
-						printf("Incorrect float value in following line. Possibly not a double");
-						printf("%s", readLine.c_str());
-						std::exit(-1);
 					}
 				}
-			}
-			if (metaSnp->getNStudy() > 1) {
-				// Analyze 1 Snp on-the-fly.
-				if (isVerbose_ && numSnps_ % 1000 == 0) {
-					printf("Analyzing SNP #%d (%s)\n", numSnps_ + 1, rsid.c_str());
-				}
-				// FE, RE, and New RE
-				metaSnp->computeFixedEffects();
-				metaSnp->computeRandomEffects();
-				metaSnp->computeHanEskin(inputLambdaMeanEffect_,
-					inputLambdaHeterogeneity_);
-				meanEffectParts_.push_back(metaSnp->getStatisticHanEskinMeanEffectPart());
-				double h = metaSnp->getStatisticHanEskinHeterogeneityPart();
-				if (h > 0.0) {
-					heterogeneityParts_.push_back(h);
-				}
-				// Binary effects model
-				if (willComputeBinaryEffects_) {
-					metaSnp->computeBinaryEffectsPvalue(binaryEffectsSample_, rand());
-					if (metaSnp->getPvalueBinaryEffects() <= binaryEffectsPvalueThreshold_) {
-						metaSnp->computeBinaryEffectsPvalue(binaryEffectsLargeSample_, rand());
+				if (metaSnp->getNStudy() > 1) 
+				{
+					// Analyze 1 Snp on-the-fly.
+					if (isVerbose_ && numSnps_ % 1000 == 0) 
+					{
+						printf("Analyzing SNP #%d (%s)\n", numSnps_ + 1, rsid.c_str());
 					}
-				}
-				// Mvalues
-				if (willComputeMvalue_) {
-					if (metaSnp->getPvalueFixedEffects() <= mvaluePvalueThreshold_ ||
-						metaSnp->getPvalueHanEskin() <= mvaluePvalueThreshold_) {
-						if (mvalueMethod_.compare("exact") == 0) {
-							metaSnp->computeMvalues(priorAlpha_, priorBeta_, priorSigma_);
-						}
-						else if (mvalueMethod_.compare("mcmc") == 0) {
-							metaSnp->computeMvaluesMCMC(priorAlpha_, priorBeta_, priorSigma_,
-								mcmcSample_, mcmcBurnin_, mcmcProbRandom_,
-								mcmcMaxNumFlip_,
-								rand());
-						}
-						else {
-							std::cout << mvalueMethod_ << std::endl;
-							assert(false);
-						}
-					}
-				}
-				numSnps_++;
-			}// end of if
-			mtx.lock();
-			metaSnp->printResults(outFile);
-			mtx.unlock();
-		}
-	}
-	tokens.clear();
+					// FE, RE, and New RE
+					metaSnp->computeFixedEffects();
+					metaSnp->computeRandomEffects();
+					metaSnp->computeHanEskin(inputLambdaMeanEffect_, inputLambdaHeterogeneity_);
 
-	// Joinable
-	*(thr_args->done) = true;
+					meanEffectParts_.push_back(metaSnp->getStatisticHanEskinMeanEffectPart());
+					
+					double h = metaSnp->getStatisticHanEskinHeterogeneityPart();
+					
+					if (h > 0.0) 
+					{
+						heterogeneityParts_.push_back(h);
+					}
+					// Binary effects model
+					if (willComputeBinaryEffects_) 
+					{
+						metaSnp->computeBinaryEffectsPvalue(binaryEffectsSample_, rand());
+						if (metaSnp->getPvalueBinaryEffects() <= binaryEffectsPvalueThreshold_) 
+						{
+							metaSnp->computeBinaryEffectsPvalue(binaryEffectsLargeSample_, rand());
+						}
+					}
+					// Mvalues
+					if (willComputeMvalue_) 
+					{
+						if (metaSnp->getPvalueFixedEffects() <= mvaluePvalueThreshold_ ||
+							metaSnp->getPvalueHanEskin() <= mvaluePvalueThreshold_) 
+						{
+							if (mvalueMethod_.compare("exact") == 0) 
+							{
+								metaSnp->computeMvalues(priorAlpha_, priorBeta_, priorSigma_);
+							}
+							else if (mvalueMethod_.compare("mcmc") == 0) 
+							{
+								metaSnp->computeMvaluesMCMC(priorAlpha_, priorBeta_, priorSigma_,
+									mcmcSample_, mcmcBurnin_, mcmcProbRandom_,
+									mcmcMaxNumFlip_,
+									rand());
+							}
+							else 
+							{
+								std::cout << mvalueMethod_ << std::endl;
+								assert(false);
+							}
+						}
+					}
+					numSnps_++;
+				}// end of if
+				mtx.lock();
+				metaSnp->printResults(outFile);
+				mtx.unlock();
+			}// end of if('#')
+		}// end of if(token.size()>1)
+		tokens.clear();
+
+		done_mtx.lock();
+		*thr_args->done_count_ptr = *thr_args->done_count_ptr+1;
+		done_mtx.unlock();
+	}
 }
-void doMetaAnalysis() {
+void doMetaAnalysis() 
+{
 	srand(seed_);
 	numSnps_ = 0;
 	maxNumStudy_ = 0;
@@ -352,123 +432,125 @@ void doMetaAnalysis() {
 	try {
 		inFile = fopen(inputFile_.c_str(), "r");
 	}
-	catch (std::exception e) {
+	catch (std::exception e) 
+	{
 		printErrorAndQuit("ERROR: Input file cannot be opened");
 	}
 	try {
 		outFile = fopen(outputFile_.c_str(), "w");
 	}
-	catch (std::exception e) {
+	catch (std::exception e) 
+	{
 		printErrorAndQuit("ERROR: Ouput file cannot be opened");
 	}
+
 	// Print headings
 	MetaSnp::printHeadings(outFile);
 
-	// Thread
 	try {
 		std::ifstream inStream(inputFile_);
-		std::string readLine;
-		int count = 0, err=0;
-#ifdef LINUX
-		std::vector <std::pair<pthread_t*, bool*>> tr_vec;
-#elif WINDOWS
-		std::vector<std::pair<std::thread*, bool*>> tr_vec;
-#endif
-		
-		while (std::getline(inStream, readLine)) {
+		std::vector<std::string> LINES;
+		unsigned int done_count = 0;
+		std::string tmp_ln;
+		thread_struct* args;
 
 #ifdef LINUX
-			pthread_t* thr_t = new pthread_t();
+		int err;
+		pthread* thr_ptr = new pthread_t();
+		std::vector<pthread_t*> thread_pool;
 #elif WINDOWS
-			std::thread* thr_t;
+		std::thread* thr_ptr;
+		std::vector<std::thread*> thread_pool;
 #endif
-			thread_struct* args = new thread_struct();
-			bool* done = new bool(false);
-			args->readLine = readLine;
-			args->outFile = outFile;
-			args->done = done;
-#ifdef LINUX	
-			err = pthread_create(thr_t, NULL, &thr_func, args);
-			if(err != 0){
-				printf("\ncan't create thread :[%s]", strerror(err));
-				exit(ERR_THREAD_CREATE);
-			}
-#elif WINDOWS
-			thr_t = new std::thread(thr_func, args);
-#endif
-			tr_vec.push_back(std::make_pair(thr_t, done));
 
-			bool b = false;
-			while (true) {
-				if (b == true || tr_vec.size() < threadNum_) {
-					break;
-				}
-				
-				bool skip_wait = false;
-				for (int k = 0; k < tr_vec.size(); k++) {
-					if (*(tr_vec.at(k).second) == true) {
-#ifdef LINUX
-						int err_res = pthread_join(*(pthread_t*)tr_vec.at(k).first, NULL);
-						if(err_res != 0){
-							printf("\ncan't join thread :[%s]", strerror(err));
-							exit(ERR_THREAD_JOIN);
-						}
-#elif WINDOWS
-						tr_vec.at(k).first->join();
-#endif
-						tr_vec.erase(tr_vec.begin() + k);
-						b = true;
-						skip_wait = true;
-						std::cout << "Current Progress : " << ++count << " finished." << "\r";
-						break;
-					}
-				}
-				if(!skip_wait){
-					// boost::this_thread::sleep_for(boost::chrono::nanoseconds(1));
-					// boost::this_thread::sleep_for(boost::chrono::seconds(1));
-					std::cout << "Current Progress : " << count << " finished." << "\r";
-					//std::this_thread::sleep_for(std::chrono::microseconds(100));
-				}
-			}
-		} // end of while(getline)
-		for (int i = 0; i < tr_vec.size(); i++) {
-#ifdef LINUX
-			int err_res = pthread_join(*(pthread_t*)tr_vec.at(i).first, NULL);
-			if(err_res != 0){
-				printf("\ncan't join thread :[%s]", strerror(err));
-				exit(ERR_THREAD_JOIN);
-			}
-#elif WINDOWS
-			tr_vec.at(i).first->join();
-#endif
+		while (std::getline(inStream, tmp_ln))
+		{
+			LINES.push_back(tmp_ln);
 		}
 
+		int N = LINES.size() / threadNum_ + (LINES.size()%threadNum_ != 0);
+
+		//TODO: Divide Lines;
+		for (int nidx = 0; nidx < threadNum_; nidx++)
+		{
+			std::vector<std::string> args_lines;
+			for (int i = N * nidx; i < N * (nidx + 1) && i < LINES.size(); i++) 
+			{
+				args_lines.push_back(LINES.at(i));
+			}
+			args = new thread_struct();
+			args->outFile = outFile;
+			args->done_count_ptr = &done_count;
+			args->lines = args_lines;;
+
+#ifdef LINUX
+			err = pthread_create(thr_ptr, NULL, &thr_func, args);
+			if (err != 0)
+			{
+				printf("\nCan't create thread: [%s]", strerr(err));
+				exit(ERROR_THREAD_CREATE);
+			}
+#elif WINDOWS
+			thr_ptr = new std::thread(thr_func, args);
+#endif
+
+			thread_pool.push_back(thr_ptr);
+		}
+
+		while (done_count < LINES.size()) {
+			//std::this_thread::sleep_for(std::chrono::microseconds(100));
+			std::cout << "Current Progress : " << done_count <<"/"<<LINES.size()<< " finished." << "\r";
+		}
+
+
+
+
+		// Join Threads
+		for (int nidx = 0; nidx < thread_pool.size(); nidx++)
+		{
+#ifdef LINUX
+			err = pthread_join(*(pthread_t*)tr_vec.at(nidx), NULL);
+			if (err != 0)
+			{
+				printf("\nCan't join thread: [%s]\n", strerror(err));
+				exit(ERROR_THREAD_JOIN);
+			}
+#elif WINDOWS
+			thread_pool.at(nidx)->join();
+#endif
+		}// end of for(nidx) : Thread Join
+
+
+		try {
+			fclose(inFile);
+			fclose(outFile);
+		}
+		catch (std::exception e)
+		{
+			printf("ERROR: file cannot be closed");
+			std::exit(ERROR_IO_FILE_CLOSE);
+		}
 	}
-	catch (std::exception e) {
-		printf("ERROR: error encountered while reading input file");
-		std::exit(-1);
+	catch (std::exception e) 
+	{
+		printf("ERROR: doMetaAnalysis [%s]", e.what());
+		std::exit(ERROR_META_ANALYSIS);
 	}
-	try {
-		fclose(inFile);
-		fclose(outFile);
-	}
-	catch (std::exception e) {
-		printf("ERROR: file cannot be closed");
-		std::exit(-1);
-	}
+	
 
 	// Reorder the Result File
 	try {
-		std::string readLine;
+		std::string tmp_str;
 		FILE* file = fopen(outputFile_.c_str(), "r");
 		std::ifstream Instream(outputFile_.c_str());
 
-		std::getline(Instream, readLine); // ignore first line
+		std::getline(Instream, tmp_str); // ignore first line
 		
 		std::vector<map_tuple> total;
 
-		while (std::getline(Instream, readLine)) {
-			map_tuple mt(stoi(readLine.substr(0, readLine.find('\t'))), readLine);
+		while (std::getline(Instream, tmp_str)) 
+		{
+			map_tuple mt(stoi(tmp_str.substr(0, tmp_str.find('\t'))), tmp_str);
 			total.push_back(mt);
 		}
 
@@ -476,42 +558,49 @@ void doMetaAnalysis() {
 		Instream.close();
 		FILE* outfile = fopen(outputFile_.c_str(), "w");
 		MetaSnp::printHeadings(outfile);
-		for (int i = 0; i < total.size(); i++) {
+		for (int i = 0; i < total.size(); i++) 
+		{
 			fprintf(outfile, "%s\n", total.at(i).val.c_str());
 		}
 		
 		fclose(outfile);
 	}
-	catch (std::exception e) {
-		printf("%s\n", e.what());
-		printf("ERROR: Posterior.txt file has been altered!");
+	catch (std::exception e) 
+	{
+		printf("ERROR: Posterior.txt file has been altered!\n[%s]",e.what());
 		std::exit(-1);
 	}
 }
 
-void computeLambda() {
+void computeLambda() 
+{
 	double median;
 	double expectedMedian;
-	if (meanEffectParts_.size() > 0) {
+	if (meanEffectParts_.size() > 0) 
+	{
 		std::sort(meanEffectParts_.begin(), meanEffectParts_.end());
 		median = meanEffectParts_.at((int)(meanEffectParts_.size() / 2.0));
 		expectedMedian = pow(boost::math::find_location<boost::math::normal>(boost::math::complement(0, 0.25, 1.0)), 2.0);
 		outputLambdaMeanEffect_ = median / expectedMedian;
 	}
-	if (heterogeneityParts_.size() > 0) {
+	if (heterogeneityParts_.size() > 0) 
+	{
 		std::sort(heterogeneityParts_.begin(), heterogeneityParts_.end());
 		median = heterogeneityParts_.at((int)(heterogeneityParts_.size() / 2.0));
-		if (maxNumStudy_ > 50) {
+		if (maxNumStudy_ > 50) 
+		{
 			expectedMedian = pow(boost::math::find_location<boost::math::normal>(boost::math::complement(0, 0.25, 1.0)), 2.0);
 		}
-		else {
+		else 
+		{
 			expectedMedian = expectedMedianHanEskinHeterogeneityPart_[maxNumStudy_ - 2];
 		}
 		outputLambdaHeterogeneity_ = median / expectedMedian;
 	}
 }
 
-void printLog(double time) {
+void printLog(double time) 
+{
 	try {
 		FILE* outFile = fopen(logFile_.c_str(),"w");
 		
@@ -529,28 +618,36 @@ void printLog(double time) {
 		fprintf(outFile,"Elapsed time : %.3f minutes\n",time);
 		fclose(outFile);
 	}
-	catch (std::exception e) {
+	catch (std::exception e) 
+	{
 		printf("ERROR: error encountered while writing in log file");
 		std::exit(-1);
 	}
 }
 
 
-int main(int argc, char* argv[]) {	
+int main(int argc, char* argv[]) 
+{	
 	time_t startTime = time(NULL);
+
 	handleArguments(argc, argv);
 	std::cout << "Arguments: " + argsSummary_ << std::endl;
+
 	MetaSnp::readPvalueTableFile(pvalueTableFile_);
+
 	std::cout<<"----- Performing meta-analysis\n";
 	doMetaAnalysis();
+
 	std::cout << "---- Performing lambda compute\n";
 	computeLambda();
+
 	std::cout << "---- print Log\n";
 	time_t endTime = time(NULL);
 	printLog(difftime(endTime, startTime)/60.0);
+
 	std::cout<<"----- Finished\n";
 	
 	std::cout << "----- Elapsed time: " << difftime(endTime,startTime)/60.0 << " minutes\n";
 
-	return NORMAL_EXECUTION;
+	return DONE_NORMAL;
 }
