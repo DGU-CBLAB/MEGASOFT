@@ -1,4 +1,3 @@
-
 #ifdef _MSC_VER
 	#define _CRT_SECURE_NO_WARNINGS
 	#define WINDOWS 1
@@ -45,6 +44,7 @@ FORCE_THREAD
 #include<cmath>
 #include<mutex>
 #include<thread>
+#include<pthread.h>
 #include<map>
 #include<boost/math/distributions/normal.hpp>
 #include<boost/math/distributions/beta.hpp>
@@ -107,6 +107,18 @@ private:
 	std::vector<double>  mvalues_;
 	static double ML_ESTIMATE_CHANGE_RATIO_THRESHOLD;
 	static double LOG_SQRT2PI;
+
+// memory optimization
+private:
+	double *betas, *variances, *weights;
+public:
+	void initMem(){
+		betas = (double*)malloc(sizeof(double)*nStudy_);
+		variances = (double*)malloc(sizeof(double)*nStudy_);
+		weights = (double*)malloc(sizeof(double)*nStudy_);
+	}
+
+
 public:
 	double logBeta(double m, double n);
 	double chiSquareComplemented(double x, double v);

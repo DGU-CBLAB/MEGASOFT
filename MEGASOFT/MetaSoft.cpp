@@ -18,8 +18,6 @@ static int threadNum_ = 1;
 
 static boost::mutex mtx;
 static boost::mutex done_mtx;
-static std::mutex cond_var_mtx;
-static std::condition_variable cond_var;
 static bool flag = false;
 
 // Arguments and default values
@@ -456,7 +454,7 @@ void doMetaAnalysis()
 
 #ifdef LINUX
 		int err;
-		pthread* thr_ptr = new pthread_t();
+		pthread_t* thr_ptr = new pthread_t();
 		std::vector<pthread_t*> thread_pool;
 #elif WINDOWS
 		std::thread* thr_ptr;
@@ -483,16 +481,16 @@ void doMetaAnalysis()
 			args->done_count_ptr = &done_count;
 			args->lines = args_lines;;
 
-#ifdef LINUX
+		#ifdef LINUX
 			err = pthread_create(thr_ptr, NULL, &thr_func, args);
 			if (err != 0)
 			{
-				printf("\nCan't create thread: [%s]", strerr(err));
+				// printf("\nCan't create thread: [%s]", strerr(err));
 				exit(ERROR_THREAD_CREATE);
 			}
-#elif WINDOWS
+		#elif WINDOWS
 			thr_ptr = new std::thread(thr_func, args);
-#endif
+		#endif
 
 			thread_pool.push_back(thr_ptr);
 		}
@@ -508,16 +506,16 @@ void doMetaAnalysis()
 		// Join Threads
 		for (int nidx = 0; nidx < thread_pool.size(); nidx++)
 		{
-#ifdef LINUX
-			err = pthread_join(*(pthread_t*)tr_vec.at(nidx), NULL);
+		#ifdef LINUX
+			err = pthread_join(*(pthread_t*)thread_pool.at(nidx), NULL);
 			if (err != 0)
 			{
-				printf("\nCan't join thread: [%s]\n", strerror(err));
+				// printf("\nCan't join thread: [%s]\n", strerror(err));
 				exit(ERROR_THREAD_JOIN);
 			}
-#elif WINDOWS
+		#elif WINDOWS
 			thread_pool.at(nidx)->join();
-#endif
+		#endif
 		}// end of for(nidx) : Thread Join
 
 

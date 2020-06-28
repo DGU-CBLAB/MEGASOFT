@@ -74,9 +74,10 @@ void MetaSnp::addNaStudy() {
 }
 
 void MetaSnp::computeFixedEffects(double lambdaMeanEffect) {
-	double* betas		= (double*)malloc(sizeof(double)*nStudy_);
-	double* variances	= (double*)malloc(sizeof(double)*nStudy_);
-	double* weights		= (double*)malloc(sizeof(double)*nStudy_);
+	this->initMem();
+	// double* betas		= (double*)malloc(sizeof(double)*nStudy_);
+	// double* variances	= (double*)malloc(sizeof(double)*nStudy_);
+	// double* weights		= (double*)malloc(sizeof(double)*nStudy_);
 
 	for (int i = 0; i < nStudy_; i++) {
 		betas[i]		= betas_.at(i);
@@ -99,9 +100,9 @@ void MetaSnp::computeFixedEffects(double lambdaMeanEffect) {
 	pvalueFixedEffects_			= chiSquareComplemented(1.0, pow(statisticFixedEffects_,2.0));//boost::math::gamma_p<double, double>(1.0 / 2.0, pow(statisticFixedEffects_, 2.0) / 2.0)/pow(2,1.0/2.0);//1 - boost::math::gamma_p<double, double>(1.0/2.0, pow(statisticFixedEffects_, 2.0)/2.0);
 	isFixedEffectsComputed_		= true;
 	
-	free(betas);
-	free(variances);
-	free(weights);
+	// free(betas);
+	// free(variances);
+	// free(weights);
 }
 
 void MetaSnp::computeFixedEffects() {
