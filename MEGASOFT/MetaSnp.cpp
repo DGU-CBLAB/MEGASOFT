@@ -18,7 +18,6 @@ double MetaSnp::logBeta(double m, double n) {
 }
 double MetaSnp::chiSquareComplemented(double v, double x) {
 	return (1 - boost::math::gamma_p<double, double>(v / 2.0, x / 2.0));
-	//return boost::math::gamma_q<double, double>(v / 2.0, x / 2.0);
 }
 // purpose : thread result comparison
 bool map_comp(const map_tuple& a, const map_tuple& b) {
@@ -74,10 +73,6 @@ void MetaSnp::addNaStudy() {
 }
 
 void MetaSnp::computeFixedEffects(double lambdaMeanEffect) {
-	this->initMem();
-	// double* betas		= (double*)malloc(sizeof(double)*nStudy_);
-	// double* variances	= (double*)malloc(sizeof(double)*nStudy_);
-	// double* weights		= (double*)malloc(sizeof(double)*nStudy_);
 
 	for (int i = 0; i < nStudy_; i++) {
 		betas[i]		= betas_.at(i);
@@ -100,9 +95,6 @@ void MetaSnp::computeFixedEffects(double lambdaMeanEffect) {
 	pvalueFixedEffects_			= chiSquareComplemented(1.0, pow(statisticFixedEffects_,2.0));//boost::math::gamma_p<double, double>(1.0 / 2.0, pow(statisticFixedEffects_, 2.0) / 2.0)/pow(2,1.0/2.0);//1 - boost::math::gamma_p<double, double>(1.0/2.0, pow(statisticFixedEffects_, 2.0)/2.0);
 	isFixedEffectsComputed_		= true;
 	
-	// free(betas);
-	// free(variances);
-	// free(weights);
 }
 
 void MetaSnp::computeFixedEffects() {
@@ -110,9 +102,6 @@ void MetaSnp::computeFixedEffects() {
 }
 
 void MetaSnp::computeHeterogeneity() {
-	double* betas		= (double*)malloc(sizeof(double)*nStudy_);
-	double* variances	= (double*)malloc(sizeof(double)*nStudy_);
-	double* weights		= (double*)malloc(sizeof(double)*nStudy_);
 
 	for (int i = 0; i < nStudy_; i++) {
 		betas[i]		= betas_.at(i);
@@ -156,18 +145,11 @@ void MetaSnp::computeHeterogeneity() {
 	}
 	isHeterogeneityComputed_ = true;
 
-	free(betas);
-	free(variances);
-	free(weights);
 }
 
 void MetaSnp::computeRandomEffects() {
 	if (!isHeterogeneityComputed_)
 		computeHeterogeneity();
-	
-	double* betas = (double*)malloc(sizeof(double)*nStudy_);
-	double* variances = (double*)malloc(sizeof(double)*nStudy_);
-	double* weights = (double*)malloc(sizeof(double)*nStudy_);
 
 	for (int i = 0; i < nStudy_; i++) {
 		betas[i]		= betas_.at(i);
@@ -189,15 +171,11 @@ void MetaSnp::computeRandomEffects() {
 	pvalueRandomEffects_		= chiSquareComplemented(1.0, pow(statisticRandomEffects_, 2.0));// 1-boost::math::gamma_p<double, double>(1.0/2.0 , pow(statisticRandomEffects_, 2.0)/2.0);
 	isRandomEffectsComputed_	= true;
 
-	free(betas);
-	free(variances);
-	free(weights);
 }
 
 void MetaSnp::computeMvalues(double priorAlpha, double priorBeta, double priorSigma) {
 	mvalues_.clear();
 	double priorVar = priorSigma * priorSigma;
-	double* betas	= (double*)malloc(sizeof(double)*nStudy_);
 	double* ts		= (double*)malloc(sizeof(double)*nStudy_); // Precision
 
 	for (int i = 0; i < nStudy_; i++) {
@@ -286,7 +264,6 @@ void MetaSnp::computeMvalues(double priorAlpha, double priorBeta, double priorSi
 
 	isMvaluesComputed_ = true;
 
-	free(betas);
 	free(ts);
 	free(H1);
 	free(priorConfig);
@@ -311,7 +288,6 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 	mvalues_.clear();
 	double priorVar = priorSigma * priorSigma;
 	
-	double* betas	= (double*)malloc(sizeof(double)*nStudy_);
 	double* ts		= (double*)malloc(sizeof(double)*nStudy_); // Precision
 
 	for (int i = 0; i < nStudy_; i++) {
@@ -437,7 +413,6 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 	}
 	isMvaluesComputed_ = true;
 
-	free(betas);
 	free(ts);
 	free(H1);
 	free(logPriorConfig);
@@ -711,10 +686,6 @@ void MetaSnp::computeHanEskin(double lambdaMeanEffect, double lambdaHeterogeneit
 		exit(-1);
 	}
 
-	double* betas		= (double*)malloc(sizeof(double)*nStudy_);
-	double* variances	= (double*)malloc(sizeof(double)*nStudy_);
-	double* weights		= (double*)malloc(sizeof(double)*nStudy_);
-
 	for (int i = 0; i < nStudy_; i++) {
 		betas[i]		= betas_.at(i);
 		variances[i]	= pow(standardErrors_.at(i), 2.0);
@@ -877,9 +848,6 @@ void MetaSnp::computeHanEskin(double lambdaMeanEffect, double lambdaHeterogeneit
 	}
 	isHanEskinComputed_ = true;
 
-	free(betas);
-	free(variances);
-	free(weights);
 }
 
 void MetaSnp::computeHanEskin() {

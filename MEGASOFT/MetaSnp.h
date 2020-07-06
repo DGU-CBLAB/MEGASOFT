@@ -15,7 +15,7 @@ FORCE_THREAD
 	#define THREAD 5
 #else
 	#define FORCE_THREAD 1
-	#define THREAD 50
+	#define THREAD 1
 #endif
 
 #define ERROR_IO 100

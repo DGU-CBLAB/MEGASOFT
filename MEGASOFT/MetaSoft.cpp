@@ -354,6 +354,7 @@ void* thr_func(void* args)
 				}
 				if (metaSnp->getNStudy() > 1) 
 				{
+					metaSnp->initMem();
 					// Analyze 1 Snp on-the-fly.
 					if (isVerbose_ && numSnps_ % 1000 == 0) 
 					{
