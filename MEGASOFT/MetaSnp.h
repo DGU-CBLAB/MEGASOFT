@@ -45,7 +45,8 @@
 /// <summary>
 /// Result Data consists of key & string(values).
 /// </summary>
-class ThreadResult {
+class ThreadResult 
+{
 public:
 	/// <param name="key">Key value</param>
 	int key;
@@ -57,7 +58,8 @@ public:
 	/// <param name="key">Key value</param>
 	/// <param name="values_str">Result values in String</param>
 	/// <returns>No Returns</returns>
-	ThreadResult(int key, std::string values_str) {
+	ThreadResult(int key, std::string values_str) 
+	{
 		this->key = key;
 		this->values_str = values_str;
 	}
@@ -65,7 +67,8 @@ public:
 bool compareKeyValues(const ThreadResult& a, const ThreadResult& b);
 void split(std::vector<std::string>& tokens, const std::string& str, const std::string& delim);
 
-class MetaSnp {
+class MetaSnp 
+{
 private:
 	std::string  rsid_;
 	int nStudy_				= 0;
@@ -109,7 +112,8 @@ private:
 private:
 	double *betas, *variances, *weights;
 public:
-	void initMem(){
+	void initMem()
+	{
 		betas = (double*)malloc(sizeof(double)*nStudy_);
 		variances = (double*)malloc(sizeof(double)*nStudy_);
 		weights = (double*)malloc(sizeof(double)*nStudy_);
@@ -141,7 +145,10 @@ protected:
 	static std::string configToString(bool* H1, int H1_n);
 public:
 	void computeHanEskin();
-	int getNStudy() { return nStudy_; }
+	int getNStudy() 
+	{
+		return nStudy_; 
+	}
 	double getHvalue(int i);
 	double getMvalue(int i);
 	double getPvalue(int i);

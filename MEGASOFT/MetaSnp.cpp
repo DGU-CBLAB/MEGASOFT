@@ -234,6 +234,7 @@ void MetaSnp::computeHeterogeneity()
 	}
 	
 	isHeterogeneityComputed_ = true;
+
 	return;
 }
 
@@ -1096,12 +1097,14 @@ void MetaSnp::computeHanEskin(double lambdaMeanEffect, double lambdaHeterogeneit
 	if (nStudy_ <= TABLE_MAX_NSTUDY) 
 	{
 		int nearestIndexBottom = floor(statisticHanEskin_ * 10.0);
+
 		if (nearestIndexBottom < 0)
 		{
 			nearestIndexBottom = 0;
 		}
 
 		int nearestIndexTop = ceil(statisticHanEskin_ * 10.0);
+
 		if (nearestIndexTop < 0)
 		{
 			nearestIndexTop = 0;
@@ -1416,6 +1419,7 @@ void MetaSnp::readPvalueTableFile(std::string pvalueTableFile)
 	}
 	
 	std::ifstream infile;
+
 	try 
 	{
 		infile = std::ifstream(pvalueTableFile);
