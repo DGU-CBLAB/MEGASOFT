@@ -12,44 +12,84 @@
 */
 #define POSINF INFINITY
 #define NEGINF -INFINITY
-double MetaSnp::logBeta(double m, double n) {
-	// return log(std::beta(m,n));
-	return log(boost::math::beta(m,n));
-}
-double MetaSnp::chiSquareComplemented(double v, double x) {
-	return (1 - boost::math::gamma_p<double, double>(v / 2.0, x / 2.0));
-}
-// purpose : thread result comparison
-bool map_comp(const map_tuple& a, const map_tuple& b) {
-	return a.key < b.key;
-}
-void split(std::vector<std::string>& tokens, const std::string& str, const std::string& delim)
-{
-	size_t prev = 0, pos = 0;
-	tokens.clear();
-	do{
-		pos = str.find(delim, prev);
-		if (str.find("\t", prev) < pos) {
-			pos = str.find("\t", prev);
-		}
-		if (pos == std::string::npos)
-			pos = str.length();
-		std::string token = str.substr(prev, pos - prev);
-		
-		if (!token.empty()) {
-			tokens.push_back(token);
-		}
-		prev = pos + delim.length();
-	} while (pos < str.length() && prev < str.length());
-}
 
 double MetaSnp::ML_ESTIMATE_CHANGE_RATIO_THRESHOLD = 0.00001;
-double MetaSnp::LOG_SQRT2PI = 0.5*log(2 * (double)M_PI);
+double MetaSnp::LOG_SQRT2PI = 0.5 * log(2 * (double)M_PI);
 
 double MetaSnp::TABLE_MAX_THRESHOLD = 33.0;
 double** MetaSnp::pvalueTable_;
 bool MetaSnp::isPvalueTableRead_ = false;
 
+
+
+double MetaSnp::logBeta(double m, double n) {
+	return log(boost::math::beta(m,n));
+}
+double MetaSnp::chiSquareComplemented(double v, double x) {
+	return (1 - boost::math::gamma_p<double, double>(v / 2.0, x / 2.0));
+}
+/// <summary>
+/// Compare ThreadResult Key Value(for sort algorithm)
+/// </summary>
+/// <param name="a">Object a</param>
+/// <param name="b">Object b</param>
+/// <returns>
+/// Return 'true' if b.key value is bigger than a.key.
+/// Return 'false' if a.key value is bigger than b.key.
+/// </returns>
+/// <example>
+/// <code>
+/// sort(vec.begin(), vec.end(), compareKeyValues);
+/// </code>
+/// </example>
+bool compareKeyValues(const ThreadResult& a, const ThreadResult& b) {
+	return a.key < b.key;
+}
+
+/// <summary>
+/// Split String into tokens using specified delimiter.
+/// </summary>
+/// <param name="tokens">String vector to save Results</param>
+/// <param name="str">Target String to be splited</param>
+/// <param name="delim">delimiter</param>
+void split(std::vector<std::string>& tokens, const std::string& str, const std::string& delim)
+{
+	size_t prev = 0, pos = 0;
+	// Empty token results
+	tokens.clear();
+
+	do
+	{
+		pos = str.find(delim, prev);
+
+		if (str.find("\t", prev) < pos) 
+		{
+			pos = str.find("\t", prev);
+		}
+		
+		if (pos == std::string::npos)
+		{
+			pos = str.length();
+		}
+
+		std::string token = str.substr(prev, pos - prev);
+		
+		if (!token.empty()) 
+		{
+			tokens.push_back(token);
+		}
+
+		prev = pos + delim.length();
+
+	} while (pos < str.length() && prev < str.length());
+
+	return;
+}
+
+/// <summary>
+/// MetaSnp Class Constructor
+/// </summary>
+/// <param name="rsid">Rapid Stain Identification Series (RSID)</param>
 MetaSnp::MetaSnp(std::string rsid) {
 	rsid_			= rsid;
 	betas_			= std::vector<double>();
@@ -59,6 +99,11 @@ MetaSnp::MetaSnp(std::string rsid) {
 	mvalues_		= std::vector<double>();
 }
 
+/// <summary>
+/// Add Study to SNP
+/// </summary>
+/// <param name="beta">Beta value</param>
+/// <param name="standardError">Standard Error</param>
 void MetaSnp::addStudy(double beta, double standardError) {
 	nStudy_++;
 	betas_.push_back(beta);
@@ -67,13 +112,22 @@ void MetaSnp::addStudy(double beta, double standardError) {
 	isNa_.push_back(false);
 }
 
+/// <summary>
+/// Add NA Study to SNP
+/// </summary>
 void MetaSnp::addNaStudy() {
 	nStudyIncludingNa_++;
 	isNa_.push_back(true);
 }
 
+/// <summary>
+/// Compute Fixed Effects
+/// </summary>
+/// <param name="lambdaMeanEffect">Lambda Mean Effect value</param>
+/// <remarks>
+/// This Function require memory for betas/variances/weights from MetaSnp::initMen()
+/// </remarks>
 void MetaSnp::computeFixedEffects(double lambdaMeanEffect) {
-
 	for (int i = 0; i < nStudy_; i++) {
 		betas[i]		= betas_.at(i);
 		variances[i]	= pow(standardErrors_.at(i), 2.0);
@@ -92,15 +146,25 @@ void MetaSnp::computeFixedEffects(double lambdaMeanEffect) {
 	standardErrorFixedEffects_	= 1.0				/ sqrt(sumWeight);
 	statisticFixedEffects_		= sumBetaProdWeight / sqrt(sumWeight);
 	statisticFixedEffects_		/= sqrt(lambdaMeanEffect);
-	pvalueFixedEffects_			= chiSquareComplemented(1.0, pow(statisticFixedEffects_,2.0));//boost::math::gamma_p<double, double>(1.0 / 2.0, pow(statisticFixedEffects_, 2.0) / 2.0)/pow(2,1.0/2.0);//1 - boost::math::gamma_p<double, double>(1.0/2.0, pow(statisticFixedEffects_, 2.0)/2.0);
+	pvalueFixedEffects_			= chiSquareComplemented(1.0, pow(statisticFixedEffects_,2.0));
 	isFixedEffectsComputed_		= true;
 	
 }
-
+/// <summary>
+/// Compute Fixed Effects(default Lambda Mean Effect = 1.0)
+/// </summary>
+/// <remarks>
+/// This function use MetaSnp::computeFixedEffects(double lambdaMeanEffect).
+/// </remarks>
 void MetaSnp::computeFixedEffects() {
 	computeFixedEffects(1.0);
 }
-
+/// <summary>
+/// Compute Heterogeneity
+/// </summary>
+/// <remarks>
+/// This Function require memory for betas/variances/weights from MetaSnp::initMen()
+/// </remarks>
 void MetaSnp::computeHeterogeneity() {
 
 	for (int i = 0; i < nStudy_; i++) {
@@ -126,7 +190,7 @@ void MetaSnp::computeHeterogeneity() {
 		Q += weights[i] * (betas[i] - meanBeta) * (betas[i] - meanBeta);
 	}
 	statisticQ_ = Q;
-	pvalueQ_	= chiSquareComplemented(nStudy_ - 1.0, Q);//boost::math::gamma_p<double, double>((nStudy_ - 1.0) / 2.0, Q / 2.0) / pow(2, (nStudy_ - 1.0) / 2.0);//1-boost::math::gamma_p<double, double>((nStudy_ -1)/2.0, Q/2.0);
+	pvalueQ_	= chiSquareComplemented(nStudy_ - 1.0, Q);
 	// replace java Math.max : finding maximum value of two
 	statisticISquare_ = (Q - (double)(nStudy_ - 1.0))/Q*100.0;
 	if (statisticISquare_ < 0.0) {
@@ -147,6 +211,12 @@ void MetaSnp::computeHeterogeneity() {
 
 }
 
+/// <summary>
+/// Compute Random Effects
+/// </summary>
+/// <remarks>
+/// This Function require memory for betas/variances/weights from MetaSnp::initMen()
+/// </remarks>
 void MetaSnp::computeRandomEffects() {
 	if (!isHeterogeneityComputed_)
 		computeHeterogeneity();
@@ -168,11 +238,16 @@ void MetaSnp::computeRandomEffects() {
 	betaRandomEffects_			= sumBetaProbWeightWithTau	/ sumWeightWithTau;
 	standardErrorRandomEffects_ = 1.0						/ sqrt(sumWeightWithTau);
 	statisticRandomEffects_		= sumBetaProbWeightWithTau	/ sqrt(sumWeightWithTau);
-	pvalueRandomEffects_		= chiSquareComplemented(1.0, pow(statisticRandomEffects_, 2.0));// 1-boost::math::gamma_p<double, double>(1.0/2.0 , pow(statisticRandomEffects_, 2.0)/2.0);
+	pvalueRandomEffects_		= chiSquareComplemented(1.0, pow(statisticRandomEffects_, 2.0));
 	isRandomEffectsComputed_	= true;
 
 }
-
+/// <summary>
+/// Compute Mvalues (Pure Computation)
+/// </summary>
+/// <param name="priorAlpha">Set Prior Alpha for Beta Distribution</param>
+/// <param name="priorBeta">Set Prior Beta for Beta Distribution</param>
+/// <param name="priorSigma">Set Prior Sigma</param>
 void MetaSnp::computeMvalues(double priorAlpha, double priorBeta, double priorSigma) {
 	mvalues_.clear();
 	double priorVar = priorSigma * priorSigma;
@@ -271,6 +346,17 @@ void MetaSnp::computeMvalues(double priorAlpha, double priorBeta, double priorSi
 	free(accumProbH1);
 }
 
+/// <summary>
+/// Compute Mvalues (Using MCMC)
+/// </summary>
+/// <param name="priorAlpha">Set Prior Alpha for Beta Distribution</param>
+/// <param name="priorBeta">Set Prior Beta for Beta Distribution</param>
+/// <param name="priorSigma">Set Prior Sigma</param>
+/// <param name="sample">Set Number of Samples for MCMC</param>
+/// <param name="burnin">Set burninCount for MCMC</param>
+/// <param name="probRandom">Set Probability Random Value MCMC</param>
+/// <param name="maxNumFlipArg">Set Maximum Number of Flips for MCMC</param>
+/// <param name="seed">Set Seed Number for Random function</param>
 void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double priorSigma, long sample, long burnin, double probRandom, double maxNumFlipArg, unsigned int seed) {
 	srand(seed);
 
@@ -313,7 +399,7 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 	// Start from a random configuration
 	int numH1 = 0;
 	for (int i = 0; i < nStudy_; i++) {
-		H1[i] = (0 + (rand() % (1 - 0 + 1)) == 1);//rand() % 2;
+		H1[i] = (0 + (rand() % (1 - 0 + 1)) == 1);
 		if (H1[i] == 1) numH1++;
 	}
 	
@@ -330,7 +416,6 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 	while (chainCount < sample) {
 		double currentLogProb = observationLogLikelihood(betas, nStudy_, ts, H1, numH1, priorVar) + logPriorConfig[numH1];
 		if( randDouble(gen) > probRandom){
-		//if ((double)rand() / (double)RAND_MAX > probRandom) {
 			// Usual jump
 			int numFlip = (rand() % maxNumFlip) + 1;
 			if (numFlip > nStudy_) {
@@ -351,8 +436,6 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 			double nextLogProb = observationLogLikelihood(betas, nStudy_, ts, H1, numH1, priorVar) + logPriorConfig[numH1];
 
 			if (nextLogProb > currentLogProb || randDouble(gen) < exp(nextLogProb - currentLogProb)) {
-//			if (nextLogProb > currentLogProb || ((double)rand() / RAND_MAX) < exp(nextLogProb - currentLogProb)) {
-				//Move
 				currentLogProb = nextLogProb;
 			}
 			else {
@@ -373,9 +456,7 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 			}
 
 			double nextLogProb = observationLogLikelihood(betas, nStudy_, ts, tmp, tmpNumH1, priorVar) + logPriorConfig[tmpNumH1];
-			//std::cout << currentLogProb << "\t:\t" << nextLogProb << std::endl;
 			if (nextLogProb > currentLogProb || randDouble(gen) < exp(nextLogProb - currentLogProb)) {
-			//if (nextLogProb > currentLogProb || ((double)rand() / RAND_MAX) < exp(nextLogProb - currentLogProb)) {
 				// Move
 				// Copy tmp to H1
 				for (int cpy = 0; cpy < nStudy_; cpy++) {
@@ -421,7 +502,16 @@ void MetaSnp::computeMvaluesMCMC(double priorAlpha, double priorBeta, double pri
 	free(tmp);
 	free(shuffleBuffer);
 }
-
+/// <summary>
+/// Calculate Observation Log Likelihood
+/// </summary>
+/// <param name="betas">Betas for log Probability</param>
+/// <param name="betas_size">Size of Betas</param>
+/// <param name="ts">???????</param>
+/// <param name="H1">For Randomized Movement</param>
+/// <param name="numH1">Number of H1</param>
+/// <param name="priorVar">Priority variable</param>
+/// <returns></returns>
 double MetaSnp::observationLogLikelihood(double* betas, int betas_size, double* ts, bool* H1, int numH1, double priorVar) {
 	int n = betas_size;
 

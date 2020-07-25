@@ -545,21 +545,21 @@ void doMetaAnalysis()
 
 		std::getline(Instream, tmp_str); // ignore first line
 		
-		std::vector<map_tuple> total;
+		std::vector<ThreadResult> total;
 
 		while (std::getline(Instream, tmp_str)) 
 		{
-			map_tuple mt(stoi(tmp_str.substr(0, tmp_str.find('\t'))), tmp_str);
+			ThreadResult mt(stoi(tmp_str.substr(0, tmp_str.find('\t'))), tmp_str);
 			total.push_back(mt);
 		}
 
-		sort(total.begin(), total.end(), map_comp);
+		sort(total.begin(), total.end(), compareKeyValues);
 		Instream.close();
 		FILE* outfile = fopen(outputFile_.c_str(), "w");
 		MetaSnp::printHeadings(outfile);
 		for (int i = 0; i < total.size(); i++) 
 		{
-			fprintf(outfile, "%s\n", total.at(i).val.c_str());
+			fprintf(outfile, "%s\n", total.at(i).values_str.c_str());
 		}
 		
 		fclose(outfile);

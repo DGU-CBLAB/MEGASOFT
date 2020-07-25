@@ -55,17 +55,27 @@ FORCE_THREAD
 	#define M_PI acos(-1.0) // Accurate PI constant
 #endif
 
-// Statistical functions
-class map_tuple {
+/// <summary>
+/// Result Data consists of key & string(values).
+/// </summary>
+class ThreadResult {
 public:
+	/// <param name="key">Key value</param>
 	int key;
-	std::string val;
-	map_tuple(int key, std::string val) {
+	/// <param name="values_str">Result values in String</param>
+	std::string values_str;
+	/// <summary>
+	/// ThreadResult Constructor
+	/// </summary>
+	/// <param name="key">Key value</param>
+	/// <param name="values_str">Result values in String</param>
+	/// <returns>No Returns</returns>
+	ThreadResult(int key, std::string values_str) {
 		this->key = key;
-		this->val = val;
+		this->values_str = values_str;
 	}
 };
-bool map_comp(const map_tuple& a, const map_tuple& b);
+bool compareKeyValues(const ThreadResult& a, const ThreadResult& b);
 void split(std::vector<std::string>& tokens, const std::string& str, const std::string& delim);
 
 class MetaSnp {
