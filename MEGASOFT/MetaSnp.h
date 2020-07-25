@@ -5,19 +5,6 @@
 	#define LINUX 1
 #endif
 
-/*
-FORCE_THREAD
-2 or higher - force thread number
-1 or less- default(use argument thread number)
-*/
-#ifdef _DEBUG 
-	#define FORCE_THREAD 1
-	#define THREAD 5
-#else
-	#define FORCE_THREAD 1
-	#define THREAD 1
-#endif
-
 #define ERROR_IO 100
 #define ERROR_IO_FILE_CLOSE 101
 #define ERROR_THREAD_CREATE 200

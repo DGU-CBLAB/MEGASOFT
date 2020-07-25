@@ -5,9 +5,11 @@
 #include <boost/thread/thread.hpp>
 #include<mutex>
 #include<condition_variable>
+
 namespace po = boost::program_options;
 
-struct{
+struct
+{
 	std::vector<std::string> lines;
 	FILE* outFile;
 	unsigned int* done_count_ptr;
@@ -192,9 +194,6 @@ void handleArguments(int argc, char* argv[])
 	if (vm.count("thread")) 
 	{
 		threadNum_ = vm["thread"].as<int>();
-#ifdef FORCE_THREAD
-		threadNum_ = THREAD;
-#endif
 	}
 	if (vm.count("help")) 
 	{
@@ -277,13 +276,15 @@ void handleArguments(int argc, char* argv[])
 	}
 	
 	// Make summary for printing
-	
 	argsSummary_ = "";
+
 	for (int i = 0; i < argc;i++) 
 	{
 		argsSummary_ += std::string(argv[i]) + " ";
 	}
 	argsSummary_ += "\n";
+
+	return;
 }
 
 void printErrorAndQuit(std::string msg) 
@@ -302,18 +303,22 @@ void* thr_func(void* args)
 	{
 		std::vector<std::string> tokens;
 		split(tokens, line, " ");
+
 		if (tokens.size() > 1) 
-		{             // only if non-empty
+		{ // only if non-empty
+
 			if (tokens.at(0).at(0) != '#') 
 			{ // only if non-comment
 				std::string rsid = tokens.at(0);
 				metaSnp = new MetaSnp(rsid);
+				
 				if (tokens.size() % 2 == 0)
 				{
 					printf("WARNING: # of Columns must be odd including Rsid. Last column is ignored.");
 				}
 
 				int nStudy = (int)((tokens.size() - 1) / 2);
+
 				if (nStudy > maxNumStudy_) 
 				{
 					maxNumStudy_ = nStudy;
@@ -323,6 +328,7 @@ void* thr_func(void* args)
 				{
 					double beta;
 					double standardError;
+
 					if (tokens.at((2.0 * i) + 1.0).compare("NA") == 0 ||
 						tokens.at((2.0 * i) + 1.0).compare("N/A") == 0 ||
 						tokens.at((2.0 * i) + 1.0).compare("NA") == 0 ||
@@ -332,9 +338,11 @@ void* thr_func(void* args)
 					}
 					else 
 					{
-						try {
+						try 
+						{
 							beta = stod(tokens.at((2.0 * i) + 1.0));
 							standardError = stod(tokens.at(2.0 * i + 2.0));
+
 							if (standardError <= 0.0) 
 							{
 								printf("Standard error cannot be <= zero (%f th column is %f) in the following line.\n",
@@ -352,6 +360,7 @@ void* thr_func(void* args)
 						}
 					}
 				}
+
 				if (metaSnp->getNStudy() > 1) 
 				{
 					metaSnp->initMem();
@@ -373,15 +382,18 @@ void* thr_func(void* args)
 					{
 						heterogeneityParts_.push_back(h);
 					}
+
 					// Binary effects model
 					if (willComputeBinaryEffects_) 
 					{
 						metaSnp->computeBinaryEffectsPvalue(binaryEffectsSample_, rand());
+
 						if (metaSnp->getPvalueBinaryEffects() <= binaryEffectsPvalueThreshold_) 
 						{
 							metaSnp->computeBinaryEffectsPvalue(binaryEffectsLargeSample_, rand());
 						}
 					}
+
 					// Mvalues
 					if (willComputeMvalue_) 
 					{
@@ -408,17 +420,22 @@ void* thr_func(void* args)
 					}
 					numSnps_++;
 				}// end of if
+
 				mtx.lock();
 				metaSnp->printResults(outFile);
 				mtx.unlock();
+
 			}// end of if('#')
+
 		}// end of if(token.size()>1)
 		tokens.clear();
 
 		done_mtx.lock();
 		*thr_args->done_count_ptr = *thr_args->done_count_ptr+1;
 		done_mtx.unlock();
-	}
+	}// end of for(LINES)
+
+	return;
 }
 void doMetaAnalysis() 
 {
@@ -428,14 +445,18 @@ void doMetaAnalysis()
 	meanEffectParts_ = std::vector<double>();
 	heterogeneityParts_ = std::vector<double>();
 	FILE* inFile, *outFile;
-	try {
+
+	try 
+	{
 		inFile = fopen(inputFile_.c_str(), "r");
 	}
 	catch (std::exception e) 
 	{
 		printErrorAndQuit("ERROR: Input file cannot be opened");
 	}
-	try {
+
+	try 
+	{
 		outFile = fopen(outputFile_.c_str(), "w");
 	}
 	catch (std::exception e) 
@@ -446,7 +467,8 @@ void doMetaAnalysis()
 	// Print headings
 	MetaSnp::printHeadings(outFile);
 
-	try {
+	try 
+	{
 		std::ifstream inStream(inputFile_);
 		std::vector<std::string> LINES;
 		unsigned int done_count = 0;
@@ -473,6 +495,7 @@ void doMetaAnalysis()
 		for (int nidx = 0; nidx < threadNum_; nidx++)
 		{
 			std::vector<std::string> args_lines;
+
 			for (int i = N * nidx; i < N * (nidx + 1) && i < LINES.size(); i++) 
 			{
 				args_lines.push_back(LINES.at(i));
@@ -496,8 +519,8 @@ void doMetaAnalysis()
 			thread_pool.push_back(thr_ptr);
 		}
 
-		while (done_count < LINES.size()) {
-			//std::this_thread::sleep_for(std::chrono::microseconds(100));
+		while (done_count < LINES.size()) 
+		{
 			std::cout << "Current Progress : " << done_count <<"/"<<LINES.size()<< " finished." << "\r";
 		}
 
@@ -520,7 +543,8 @@ void doMetaAnalysis()
 		}// end of for(nidx) : Thread Join
 
 
-		try {
+		try 
+		{
 			fclose(inFile);
 			fclose(outFile);
 		}
@@ -538,7 +562,8 @@ void doMetaAnalysis()
 	
 
 	// Reorder the Result File
-	try {
+	try 
+	{
 		std::string tmp_str;
 		FILE* file = fopen(outputFile_.c_str(), "r");
 		std::ifstream Instream(outputFile_.c_str());
@@ -557,6 +582,7 @@ void doMetaAnalysis()
 		Instream.close();
 		FILE* outfile = fopen(outputFile_.c_str(), "w");
 		MetaSnp::printHeadings(outfile);
+
 		for (int i = 0; i < total.size(); i++) 
 		{
 			fprintf(outfile, "%s\n", total.at(i).values_str.c_str());
@@ -569,12 +595,15 @@ void doMetaAnalysis()
 		printf("ERROR: Posterior.txt file has been altered!\n[%s]",e.what());
 		std::exit(-1);
 	}
+
+	return;
 }
 
 void computeLambda() 
 {
 	double median;
 	double expectedMedian;
+
 	if (meanEffectParts_.size() > 0) 
 	{
 		std::sort(meanEffectParts_.begin(), meanEffectParts_.end());
@@ -582,10 +611,12 @@ void computeLambda()
 		expectedMedian = pow(boost::math::find_location<boost::math::normal>(boost::math::complement(0, 0.25, 1.0)), 2.0);
 		outputLambdaMeanEffect_ = median / expectedMedian;
 	}
+
 	if (heterogeneityParts_.size() > 0) 
 	{
 		std::sort(heterogeneityParts_.begin(), heterogeneityParts_.end());
 		median = heterogeneityParts_.at((int)(heterogeneityParts_.size() / 2.0));
+
 		if (maxNumStudy_ > 50) 
 		{
 			expectedMedian = pow(boost::math::find_location<boost::math::normal>(boost::math::complement(0, 0.25, 1.0)), 2.0);
@@ -596,11 +627,14 @@ void computeLambda()
 		}
 		outputLambdaHeterogeneity_ = median / expectedMedian;
 	}
+
+	return;
 }
 
 void printLog(double time) 
 {
-	try {
+	try 
+	{
 		FILE* outFile = fopen(logFile_.c_str(),"w");
 		
 		fprintf(outFile,"Arguments: %s ", argsSummary_.c_str());
@@ -622,6 +656,8 @@ void printLog(double time)
 		printf("ERROR: error encountered while writing in log file");
 		std::exit(-1);
 	}
+
+	return;
 }
 
 
