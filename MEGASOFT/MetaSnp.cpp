@@ -21,10 +21,16 @@ double** MetaSnp::pvalueTable_;
 bool MetaSnp::isPvalueTableRead_ = false;
 
 
-
-double MetaSnp::logBeta(double m, double n) 
+/// <summary>
+/// Calculate Log Beta Distribution
+/// </summary>
+/// <param name="a">a Posterior shape parameter</param>
+/// <param name="b">b Posterior shape parameter</param>
+/// <see cref="https://www.boost.org/doc/libs/1_67_0/libs/math/doc/html/math_toolkit/sf_beta/beta_function.html">Link</see>
+/// <returns>Result of Log Beta Distribution</returns>
+double MetaSnp::logBeta(double a, double b) 
 {
-	return log(boost::math::beta(m,n));
+	return log(boost::math::beta(a,b));
 }
 double MetaSnp::chiSquareComplemented(double v, double x) 
 {
