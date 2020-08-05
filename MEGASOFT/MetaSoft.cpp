@@ -15,12 +15,12 @@ struct
 	unsigned int* done_count_ptr;
 }typedef thread_struct;
 
-// Multi-Thread variables
-static int threadNum_ = 1;
+// Multi-Thread variables(default=1)
+static int	threadNum_ = 1;
 
 static boost::mutex mtx;
 static boost::mutex done_mtx;
-static bool flag = false;
+static bool		flag = false;
 
 // Arguments and default values
 static std::string  inputFile_ = "";
@@ -29,7 +29,7 @@ static std::string  logFile_ = ".\\log";
 static std::string  pvalueTableFile_ = "HanEskinPvalueTable.txt";
 static double  inputLambdaMeanEffect_ = 1.0;
 static double  inputLambdaHeterogeneity_ = 1.0;
-static bool willComputeMvalue_ = false;
+static bool		willComputeMvalue_ = false;
 static double  priorSigma_ = 0.2;
 static double  priorAlpha_ = 1.0;
 static double  priorBeta_ = 1.0;
@@ -39,12 +39,12 @@ static long    mcmcSample_ = 10000;
 static long    mcmcBurnin_ = 1000;
 static double  mcmcProbRandom_ = 0.01;
 static double  mcmcMaxNumFlip_ = 0.1;
-static bool willComputeBinaryEffects_ = false;
+static bool		willComputeBinaryEffects_ = false;
 static long    binaryEffectsSample_ = 1000;
 static long    binaryEffectsLargeSample_ = 100000;
 static double  binaryEffectsPvalueThreshold_ = 1E-4;
 static unsigned int     seed_ = 0;
-static bool isVerbose_ = false;
+static bool		isVerbose_ = false;
 
 // Internally used variables
 static int    numSnps_;
