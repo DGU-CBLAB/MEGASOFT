@@ -2,19 +2,20 @@
 #!/bin/bash
 
 $TestSettings
-NumThreads=(1 3 5 10 15 20 25)
+NumThreads=(1 3)
+# 5 10 15 20 25)
 StrDate=$(date +'%F')
 OS="Ubuntu"
 
 $Directory
 DirData="../_bin/"
-DirOutput="../Ubuntu/"$StrDate'/'
+DirOutput="../"$OS"/"$StrDate'/'
 DirInput="../input_samples/"
 DirMEGA="./MEGASOFT.o"
 
 $DataSet
-NumStudies=
-NumSNPs=
+NumStudies=8
+NumSNPs=1000
 
 $MEGASOFT_Options
 _method=mcmc
@@ -28,7 +29,8 @@ _thres=1.0
 
 $Performance_Test
 cp ../../MEGASOFT/MEGASOFT.o ./MEGASOFT.o
-
+mkdir "../"$OS
+mkdir $DirOutput
 for nthr in ${NumThreads[@]}
 do
     DirIn=$DirInput'inputMS_'$NumStudies'_'$NumSNPs'.txt'
@@ -36,7 +38,7 @@ do
     DirOut=$DirOutput'posterior_'$NumStudies'_'$NumSNPs'_'$OS'_'$nthr".txt"
     DirLog=$DirOutput'Log_'$NumStudies'_'$NumSNPs'_'$OS'_'$nthr".log"
     
-    Script="sudo "$DirMEGA
+    Script=" "$DirMEGA
     Script=$Script" --input "$DirIn
     Script=$Script" --pvalue_table "$DirHan
     Script=$Script" --output "$DirOut
