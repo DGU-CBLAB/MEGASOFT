@@ -2,8 +2,7 @@
 #!/bin/bash
 
 $TestSettings
-NumThreads=(1 3)
-# 5 10 15 20 25)
+NumThreads=(1 2 3 4 5 6 7 8 9 10)
 StrDate=$(date +'%F')
 OS="Ubuntu"
 
@@ -15,7 +14,7 @@ DirMEGA="./MEGASOFT.o"
 
 $DataSet
 NumStudies=8
-NumSNPs=1000
+NumSNPs=10000
 
 $MEGASOFT_Options
 _method=mcmc
@@ -33,7 +32,7 @@ mkdir "../"$OS
 mkdir $DirOutput
 for nthr in ${NumThreads[@]}
 do
-    DirIn=$DirInput'inputMS_'$NumStudies'_'$NumSNPs'.txt'
+    DirIn=$DirInput'inputMS_'$NumStudies'x'$NumSNPs'.txt'
     DirHan=$DirData"HanEskinPvalueTable.txt"
     DirOut=$DirOutput'posterior_'$NumStudies'_'$NumSNPs'_'$OS'_'$nthr".txt"
     DirLog=$DirOutput'Log_'$NumStudies'_'$NumSNPs'_'$OS'_'$nthr".log"

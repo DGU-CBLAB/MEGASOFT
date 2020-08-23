@@ -5,8 +5,8 @@
 ## The package mvtnorm can computes multivariate normal and t probabilities, quantiles, random deviates and densities.
 require(mvtnorm)
 # study_size = 4n
-study_size = 60
-num_snps = 1000
+study_size = 40
+num_snps = 10000
 save_dir = paste('./inputMS_',toString(study_size),'x',toString(num_snps),'.txt',sep="", collapse=NULL)
 verbose = TRUE
 tau2.zero.prob=c(0.8415,0.7709,0.7413,0.7135,0.6989,0.6742,0.663,0.6542,0.6506,0.646,0.6411,0.6281,0.6229,0.6308,0.6299,0.6152,0.6103,0.6121,0.618,0.6049,0.6068,0.597,0.5924,0.5946,0.5954,0.5881,0.5899,0.5809,0.5922,0.5854,0.583,0.5794,0.5768,0.5817,0.5773,0.5848,0.5764,0.5821,0.5777,0.5804,0.5735,0.5736,0.5691,0.5674,0.5681,0.5739,0.5705,0.568,0.5587) ## From nstudy 2 to nstudy 50 (49 entries)
