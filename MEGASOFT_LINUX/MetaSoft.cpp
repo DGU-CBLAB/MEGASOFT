@@ -25,12 +25,12 @@ static std::string 	_outputFile						= "out";
 static std::string 	_logFile 						= ".\\log";
 static std::string	_pvalueTableFile 				= "HanEskinPvalueTable.txt";
 
-static double 		_inputLambdaMeanEffects			= 1.0;
-static double		_inputLambdaHeterogeneity		= 1.0;
-static double 		_priorSigma						= 0.2;
-static double		_priorAlpha						= 1.0;
-static double 		_priorBeta						= 1.0;
-static double 		_mvaluePvalueThreshold			= 1E-7;
+static float 		_inputLambdaMeanEffects			= 1.0;
+static float		_inputLambdaHeterogeneity		= 1.0;
+static float 		_priorSigma						= 0.2;
+static float		_priorAlpha						= 1.0;
+static float 		_priorBeta						= 1.0;
+static float 		_mvaluePvalueThreshold			= 1E-7;
 static std::string	_mvalueMethod					= "exact";
 static unsigned int	_mcmcSample						= 10_000;
 static unsigned int	_mcmcBurnin						= 1_000;
@@ -38,7 +38,7 @@ static float 		_mcmcProbRandom					= 0.01;
 static float 		_mcmcMaxNumFlip					= 0.1;
 static unsigned int	_binaryEffectsSample			= 1_000;
 static unsigned int	_binaryEffectsLargeSample		= 100_000;
-static double 		_binaryEffectsPvalueThreshold	= 1E-4;
+static float 		_binaryEffectsPvalueThreshold	= 1E-4;
 
 static bool			_willComputeMvalue 				= false;
 static bool			_willComputeBinaryEffects		= false;
@@ -48,16 +48,47 @@ static bool 		_verbose						= false;
 
 static unsigned int	_numSNPs;
 static unsigned int	_maxNumStudy;
-static double 		_outputLambdaMeanEffects;
-static double 		_outputLambdaHeterogeneity;
-static std::vector<double>	_meanEffectsParts;
-static std::vector<double> 	_heterogeneityParts;
+static float 		_outputLambdaMeanEffects;
+static float 		_outputLambdaHeterogeneity;
+static std::vector<float>	_meanEffectsParts;
+static std::vector<float> 	_heterogeneityParts;
 static std::string			_argsSummary;
 
 const float expectedMedianHanEskinHeterogeneityPart_[] = // from nStudy 2 to 50
 { 0.2195907137,0.2471516439,0.2642270318,0.2780769264,0.2886280267,0.2977812664,0.3020051148,0.3091428179,0.3158605559,0.3221788173,0.3259133140,0.3295976587,0.3335375196,0.3358395088,0.3368309971,0.3421941686,0.3448030927,0.3463590948,0.3477384754,0.3487900288,0.3494938171,0.3542087791,0.3573286353,0.3589703411,0.3586951356,0.3596101209,0.3605611682,0.3624799993,0.3648322669,0.3659817739,0.3671267389,0.3693952373,0.3693395144,0.3696863113,0.3706067524,0.3718103285,0.3749536619,0.3758886239,0.3753612342,0.3781458299,0.3798346038,0.3763434983,0.3796968747,0.3784334922,0.3794411347,0.3808582942,0.3813485882,0.3843230993,0.3824863479 };
 
+void handleArguments(int argc, char* argv[]);
 void errorHandler(std::string msg);
+void doMetaAnalysis();
+
+int main(int argc, char* argv[]) 
+{	
+	time_t startTime = time(NULL);
+
+	handleArguments(argc, argv);
+	std::cout << "Arguments: " + argsSummary_ << std::endl;
+
+	MetaSnp::readPvalueTableFile(pvalueTableFile_);
+
+	std::cout<<"----- Performing meta-analysis\n";
+	doMetaAnalysis();
+
+	std::cout << "---- Performing lambda compute\n";
+	computeLambda();
+
+	std::cout << "---- print Log\n";
+	time_t endTime = time(NULL);
+	printLog(difftime(endTime, startTime)/60.0);
+
+	std::cout<<"----- Finished\n";
+	
+	std::cout << "----- Elapsed time: " << difftime(endTime,startTime)/60.0 << " minutes\n";
+
+	return DONE_NORMAL;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 void handleArguments(int argc, char* argv[]) 
 {
@@ -68,13 +99,13 @@ void handleArguments(int argc, char* argv[])
 		("output", 					po::value<std::string>(), 					"Output file (default='out')")
 		("pvalue_table", 			po::value<std::string>(), 					"value table file (default='HanEskinPvalueTable.txt')")
 		("log", 					po::value<std::string>(), 					"Log file (default='log')")
-		("lambda_mean", 			po::value<double>(), 						"(Random Effects) User-specified lambda for mean effect part (default=1.0)")
-		("lambda_hetero", 			po::value<double>(), 						"(Random Effects) User-specified lambda for heterogeneity part (default=1.0)")
+		("lambda_mean", 			po::value<float>(), 						"(Random Effects) User-specified lambda for mean effect part (default=1.0)")
+		("lambda_hetero", 			po::value<float>(), 						"(Random Effects) User-specified lambda for heterogeneity part (default=1.0)")
 		("mvalue", 					po::bool_switch()->default_value(false), 	"Compute m-value(default=false)")
-		("mvalue_prior_sigma", 		po::value<double>(), 						"Sigma value for normal prior N(0, sigma^2) for effect (default=0.2)")
+		("mvalue_prior_sigma", 		po::value<float>(), 						"Sigma value for normal prior N(0, sigma^2) for effect (default=0.2)")
 		("mvalue_prior_alpha", 		po::value<std::string>(), 					"Alpha value for Beta dist prior Betadist(alpha,beta) for existence of effect (default=1.0,1.0)")
 		("mvalue_prior_beta", 		po::value<std::string>(), 					"Beta value for Beta dist prior Betadist(alpha,beta) for existence of effect (default=1.0,1.0)")
-		("mvalue_p_thres", 			po::value<double>(), 						"Compute m-values only for SNPs whose FE or RE2 p-value is below this threshold (default=1E-7)")
+		("mvalue_p_thres", 			po::value<float>(), 						"Compute m-values only for SNPs whose FE or RE2 p-value is below this threshold (default=1E-7)")
 		("mvalue_method", 			po::value<std::string>(), 					"Which method to use to calculate m-value between 'exact' and 'mcmc' (default=exact)")
 		("mcmc_sample", 			po::value<unsigned int>(), 					"(MCMC) Number of samples (default=10,000)")
 		("mcmc_burnin", 			po::value<unsigned int>(), 					"(MCMC) Number of burn-in (default=1,000)")
@@ -83,7 +114,7 @@ void handleArguments(int argc, char* argv[])
 		("binary_effects", 			po::value<std::string>(), 					"Compute binary effects model p-value (default=false)")
 		("binary_effects_sample", 	po::value<unsigned int>(), 							"(Binary effects) Number of importance sampling samples (default=1,000)")
 		("binary_effects_large", 	po::value<unsigned int>(), 							"(Binary effects) Large number of importance sampling samples for p-values above threshold (default=100,000)")
-		("binary_effect_p_thres", 	po::value<double>(), 						"(Binary effects) P-value threshold determining if we will use large number of samples (default=1E-4)")
+		("binary_effect_p_thres", 	po::value<float>(), 						"(Binary effects) P-value threshold determining if we will use large number of samples (default=1E-4)")
 		("seed", 					po::value<unsigned int>(), 							"Random number generator seed (default=0)")
 		("verbose", 				po::bool_switch()->default_value(false), 	"Print RSID verbosely per every 1,000 SNPs (default=false)")
 		("thread", 					po::value<unsigned int>(), 							"Set Number of Threads")
@@ -117,18 +148,18 @@ void handleArguments(int argc, char* argv[])
 	}
 	if (vm.count("lambda_mean")) 
 	{
-		_inputLambdaMeanEffects = vm["lambda_mean"].as<double>();
+		_inputLambdaMeanEffects = vm["lambda_mean"].as<float>();
 	}
 	if (vm.count("lambda_hetero")) 
 	{
-		_inputLambdaHeterogeneity = vm["lambda_hetero"].as<double>();
+		_inputLambdaHeterogeneity = vm["lambda_hetero"].as<float>();
 	}
 	if (vm.count("mvalue")) 
 	{
 		_willComputeMvalue = true;
 		if (vm.count("mvalue_prior_sigma")) 
 		{
-			_priorSigma = vm["mvalue_prior_sigma"].as<double>();
+			_priorSigma = vm["mvalue_prior_sigma"].as<float>();
 		}
 		if (vm.count("mvalue_prior_alpha")) 
 		{
@@ -140,7 +171,7 @@ void handleArguments(int argc, char* argv[])
 		}
 		if (vm.count("mvalue_p_thres")) 
 		{
-			_mvaluePvalueThreshold = vm["mvalue_p_thres"].as<double>();
+			_mvaluePvalueThreshold = vm["mvalue_p_thres"].as<float>();
 		}
 		if (vm.count("mvalue_method")) 
 		{
@@ -150,19 +181,19 @@ void handleArguments(int argc, char* argv[])
 		{
 			if (vm.count("mcmc_sample")) 
 			{
-				_mcmcSample = vm["mcmc_sample"].as<long>();
+				_mcmcSample = vm["mcmc_sample"].as<unsigned int>();
 			}
 			if (vm.count("mcmc_burnin")) 
 			{
-				_mcmcBurnin = vm["mcmc_burnin"].as<long>();
+				_mcmcBurnin = vm["mcmc_burnin"].as<unsigned int>();
 			}
 			if (vm.count("mcmc_prob_random_move")) 
 			{
-				_mcmcProbRandom = vm["mcmc_prob_random_move"].as<double>();
+				_mcmcProbRandom = vm["mcmc_prob_random_move"].as<float>();
 			}
 			if (vm.count("mcmc_max_num_flip")) 
 			{
-				_mcmcMaxNumFlip = vm["mcmc_max_num_flip"].as<double>();
+				_mcmcMaxNumFlip = vm["mcmc_max_num_flip"].as<float>();
 			}
 		}
 	}
@@ -171,20 +202,20 @@ void handleArguments(int argc, char* argv[])
 		_willComputeBinaryEffects = true;
 		if (vm.count("binary_effects_sample")) 
 		{
-			_binaryEffectsSample = vm["binary_effects_sample"].as<long>();
+			_binaryEffectsSample = vm["binary_effects_sample"].as<unsigned int>();
 		}
 		if (vm.count("binary_effects_large")) 
 		{
-			_binaryEffectsLargeSample = vm["binary_effects_large"].as<long>();
+			_binaryEffectsLargeSample = vm["binary_effects_large"].as<unsigned int>();
 		}
 		if (vm.count("binary_effects_p_thres")) 
 		{
-			_binaryEffectsPvalueThreshold = vm["binary_effects_p_thres"].as<double>();
+			_binaryEffectsPvalueThreshold = vm["binary_effects_p_thres"].as<float>();
 		}
 	}
 	if (vm.count("seed")) 
 	{
-		_seed = vm["seed"].as<int>();
+		_seed = vm["seed"].as<unsigned int>();
 	}
 	if (vm["verbose"].as<bool>() == true) 
 	{
@@ -192,7 +223,7 @@ void handleArguments(int argc, char* argv[])
 	}
 	if (vm.count("thread")) 
 	{
-		_threadNum = vm["thread"].as<int>();
+		_threadNum = vm["thread"].as<unsigned int>();
 #ifdef FORCE_THREAD
 		threadNum_ = THREAD;
 #endif
@@ -285,4 +316,44 @@ void handleArguments(int argc, char* argv[])
 		_argsSummary += std::string(argv[i]) + " ";
 	}
 	_argsSummary += "\n";
+}
+
+void errorHandler(std::string msg)
+{
+	printf("ERROR: %s\n", msg.c_str());
+	std::exit(-1);
+}
+
+void doMetaAnalysis()
+{
+	srand(seed_);
+	_numSNPs = _maxNumStudy = 0;
+	
+	FILE *in, *out;
+
+	try{
+		in 	= fopen(_inputFile.c_str(), "r");
+		out = fopen(_outputFile.c_str(), "w");
+
+		if(in == NULL || out == NULL)
+		{
+			throw ERROR_IO_FILE_OPEN_CLOSE;
+		}
+
+
+
+
+
+	}catch(int e){
+		printf("Error: [%d] %s\n", e, ERROR_MESSAGE[e]);
+	}
+	catch(std::exception e){
+		printf("Error: unable to Analyze\n");
+		exit(ERROR_UNDEFINED);	
+	}
+
+
+
+
+	return;
 }
