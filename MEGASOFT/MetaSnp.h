@@ -44,7 +44,9 @@ FORCE_THREAD
 #include<cmath>
 #include<mutex>
 #include<thread>
+#ifdef LINUX
 #include<pthread.h>
+#endif
 #include<map>
 #include<boost/math/distributions/normal.hpp>
 #include<boost/math/distributions/beta.hpp>

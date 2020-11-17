@@ -11,12 +11,12 @@
     <LocalDebuggerWorkingDirectory>..</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LocalDebuggerCommandArguments>.\\MEGASOFT_WIN64.exe --input .\\TestData\\inputMS.txt --pvalue_table .\\TestData\\HanEskinPvalueTable.txt --output .\\TestData\\posterior_windows_c++_static.txt --log .\\TestData\\log_c++_static.txt --mvalue --mvalue_method mcmc --mcmc_sample 1000000 --seed 0 --mvalue_prior_sigma 0.05 --mvalue_prior_alpha 1 --mvalue_prior_beta 5 --mvalue_p_thres 1.0 --thread 1</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>.\\MEGASOFT_WIN64.exe --input .\\TestData\\input_samples\\inputMS.txt --pvalue_table .\\TestData\\HanEskinPvalueTable.txt --output .\\TestData\\posterior_windows_c++_static.txt --log .\\TestData\\log_c++_static.txt --mvalue --mvalue_method mcmc --mcmc_sample 1000000 --seed 0 --mvalue_prior_sigma 0.05 --mvalue_prior_alpha 1 --mvalue_prior_beta 5 --mvalue_p_thres 1.0 --thread 100</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>..</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LocalDebuggerCommandArguments>.\\MEGASOFT_WIN64.exe --input .\\TestData\\inputMS.txt --pvalue_table .\\TestData\\HanEskinPvalueTable.txt --output .\\TestData\\posterior_windows_c++_static.txt --log .\\TestData\\log_c++_static.txt --mvalue --mvalue_method mcmc --mcmc_sample 1000000 --seed 0 --mvalue_prior_sigma 0.05 --mvalue_prior_alpha 1 --mvalue_prior_beta 5 --mvalue_p_thres 1.0 --thread 1</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>.\\MEGASOFT_WIN64.exe --input .\\TestData\\input_samples\\inputMS.txt --pvalue_table .\\TestData\\HanEskinPvalueTable.txt --output .\\TestData\\posterior_windows_c++_static.txt --log .\\TestData\\log_c++_static.txt --mvalue --mvalue_method mcmc --mcmc_sample 1000000 --seed 0 --mvalue_prior_sigma 0.05 --mvalue_prior_alpha 1 --mvalue_prior_beta 5 --mvalue_p_thres 1.0 --thread 100</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>..</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
