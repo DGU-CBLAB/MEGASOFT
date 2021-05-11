@@ -43,8 +43,11 @@ FORCE_THREAD
 #include<math.h>
 #include<cmath>
 #include<mutex>
-#include<thread>
-#include<pthread.h>
+#ifdef _MSC_VER
+	#include<thread>
+#elif
+	#include<pthread.h>
+#endif
 #include<map>
 #include<boost/math/distributions/normal.hpp>
 #include<boost/math/distributions/beta.hpp>
