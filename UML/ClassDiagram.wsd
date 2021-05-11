@@ -1,0 +1,102 @@
+@startuml ClassDiagram
+class MetaSnp
+{
+    -nStudy_:int
+    -nStudyIncludingNa_:int
+    - statisticFixedEffects_:double
+	- pvalueFixedEffects_:double
+	- betaFixedEffects_:double
+	- standardErrorFixedEffects_:double
+	- statisticRandomEffects_:double
+	- pvalueRandomEffects_:double
+	- betaRandomEffects_:double
+	- standardErrorRandomEffects_:double
+	- statisticHanEskin_:double
+	- statisticHanEskinMeanEffectPart_:double
+	- statisticHanEskinHeterogeneityPart_:double
+	- pvalueHanEskinAsymptotic_:double
+	- pvalueHanEskinTabulated_:double
+	- statisticBinaryEffects_:double
+	- pvalueBinaryEffects_:double
+	- statisticQ_:double
+	- pvalueQ_:double
+	- statisticISquare_:double
+	- statisticTauSquare_:double
+	- isFixedEffectsComputed_:bool
+	- isRandomEffectsComputed_:bool
+	- isHeterogeneityComputed_:bool
+	- isHvaluesComputed_:bool
+	- isMvaluesComputed_:bool
+	- isHanEskinComputed_:bool
+	- isBinaryEffectsStatisticComputed_:bool
+	- isBinaryEffectsPvalueComputed_:bool
+	- betas_:vector<double>
+	- standardErrors_:vector<double>
+	- isNa_:vector<bool>
+	- hvalues_:vector<double>
+	- mvalues_:vector<double>
+	{static} - ML_ESTIMATE_CHANGE_RATIO_THRESHOLD:double
+	{static} - LOG_SQRT2PI:double
+    - betas:double*
+    - variances:double*
+    - weights:double*
+    + initMem()
+    + logBeta()
+    + chiSquareComplemented()
+    + addStudy()
+    + addNaStudy()
+    + computeFixedEffects()
+    + computeHeterogeneity()
+    + computeRandomEffects()
+    + computeMvalues()
+    + computeMvaluesMCMC()
+    - observationLogLikelihood()
+    + computeHvalues()
+    + printPvalueAndHvalues()
+    + computeBinaryEffectsStatistic()
+    + computeBinaryEffectsPvalue()
+    + computeHanEskin()
+    # configToString()
+    + getNStudy()
+    + getHvalue()
+    + getMvalue()
+    + getPvalue()
+    + getPvalueFixedEffects()
+    + getBetaFixedEffects()
+    + getStandardErrorFixedEffects()
+    + getPvalueRandomEffects()
+    + getBetaRandomEffects()
+	+ getStandardEfforRandomEffects()
+	+ getPvalueHanEskin()
+	+ getStatisticHanEskinMeanEffectPart()
+	+ getStatisticHanEskinHeterogeneityPart()
+	+ getStatisticBinaryEffects()
+	+ getPvalueBinaryEffects()
+	{static} + printHeadings()
+	+ printResults()
+    {static} + TABLE_NROW: int
+	{static} + TABLE_MAX_NSTUDY:int
+	{static} + TABLE_NCOLUMN:int
+	{static} + TABLE_MAX_THRESHOLD:double
+	{static} + pvalueTable_:double
+	{static} + isPvalueTableRead_:bool
+    + readPvalueTableFile()
+}
+class Global
+{
+    + printErrorAndQuit()
+    + handleArguments()
+    + thr_func()
+    + doMetaAnalysis()
+    + computeLambda()
+    + printLog()
+}
+class Main
+{
+    + startTime:time_t
+    + endTime:time_t
+}
+Global <|-- Main
+MetaSnp <|-- Main
+MetaSnp <|-- Global
+@enduml
