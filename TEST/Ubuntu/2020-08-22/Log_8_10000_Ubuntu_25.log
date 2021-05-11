@@ -1,0 +1,12 @@
+Arguments: ./MEGASOFT.o --input ../input_samples/inputMS_8x10000.txt --pvalue_table ../_bin/HanEskinPvalueTable.txt --output ../Ubuntu/2020-08-22/posterior_8_10000_Ubuntu_25.txt --log ../Ubuntu/2020-08-22/Log_8_10000_Ubuntu_25.log --mvalue --mvalue_method mcmc --mcmc_sample 1000000 --seed 0 --mvalue_prior_sigma 0.05 --mvalue_prior_alpha 1 --mvalue_prior_beta 5 --mvalue_p_thres 1.0 --thread 25 
+ Input File: ../input_samples/inputMS_8x10000.txt
+Output File: ../Ubuntu/2020-08-22/posterior_8_10000_Ubuntu_25.txt
+Log File: ../Ubuntu/2020-08-22/Log_8_10000_Ubuntu_25.log
+p-value Table File: ../_bin/HanEskinPvalueTable.txt
+Number of SNPs analyzed: 10000
+Maximum number of studies: 8
+Specified lambda for   mean effect part (default = 1.0): 1.000000
+Specified lambda for heterogeneity part (default = 1.0): 1.000000
+Newly calculated inflation factor lambda for   mean effect part: 42.197717
+Newly calculated inflation factor lambda for heterogeneity part: 31.090908
+Elapsed time : 105.933 minutes
