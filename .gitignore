@@ -10,3 +10,14 @@ vc142.pdb
 
 #LINUX gitignore
 vcpkg.applocal.log
+TestData/performance_test/inputMS_100000x8.txt
+TestData/performance_test/inputMS_10000x8.txt
+TestData/performance_test/inputMS_1000x20.txt
+TestData/performance_test/inputMS_1000x40.txt
+TestData/performance_test/inputMS_1000x8.txt
+TestData/performance_test/temp/log_1000x20_CPP.txt
+TestData/performance_test/temp/log_1000x40_CPP.txt
+TestData/performance_test/temp/log_1000x8_CPP.txt
+TestData/performance_test/temp/posterior_1000x20_CPP.txt
+TestData/performance_test/temp/posterior_1000x40_CPP.txt
+TestData/performance_test/temp/posterior_1000x8_CPP.txt
