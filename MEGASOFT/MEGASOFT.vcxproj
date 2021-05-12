@@ -21,9 +21,13 @@
   <ItemGroup>
     <ClCompile Include="MetaSnp.cpp" />
     <ClCompile Include="MetaSoft.cpp" />
+    <ClCompile Include="Options.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Config.h" />
+    <ClInclude Include="Log.h" />
     <ClInclude Include="MetaSnp.h" />
+    <ClInclude Include="Options.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\TestData\inputMS.txt" />
@@ -182,7 +186,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\boost_1_76_0\stage\include\boost-1_76;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <LanguageStandard>stdcpp14</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

@@ -21,3 +21,4 @@ TestData/performance_test/temp/log_1000x8_CPP.txt
 TestData/performance_test/temp/posterior_1000x20_CPP.txt
 TestData/performance_test/temp/posterior_1000x40_CPP.txt
 TestData/performance_test/temp/posterior_1000x8_CPP.txt
+TestData/posterior_windows_c++_static.txt
