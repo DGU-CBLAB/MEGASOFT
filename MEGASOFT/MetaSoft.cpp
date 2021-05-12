@@ -1,5 +1,5 @@
 #include "MetaSnp.h"
-#include "Options.h"
+#include "Scheduler.h"
 #include <ctime>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
@@ -27,14 +27,6 @@ static std::vector<double> heterogeneityParts_;
 const double expectedMedianHanEskinHeterogeneityPart_[] = // from nStudy 2 to 50
 { 0.2195907137,0.2471516439,0.2642270318,0.2780769264,0.2886280267,0.2977812664,0.3020051148,0.3091428179,0.3158605559,0.3221788173,0.3259133140,0.3295976587,0.3335375196,0.3358395088,0.3368309971,0.3421941686,0.3448030927,0.3463590948,0.3477384754,0.3487900288,0.3494938171,0.3542087791,0.3573286353,0.3589703411,0.3586951356,0.3596101209,0.3605611682,0.3624799993,0.3648322669,0.3659817739,0.3671267389,0.3693952373,0.3693395144,0.3696863113,0.3706067524,0.3718103285,0.3749536619,0.3758886239,0.3753612342,0.3781458299,0.3798346038,0.3763434983,0.3796968747,0.3784334922,0.3794411347,0.3808582942,0.3813485882,0.3843230993,0.3824863479 };
 
-//void printErrorAndQuit(std::string msg);
-//
-//
-//void printErrorAndQuit(std::string msg) 
-//{
-//	printf("%s\n",msg.c_str());
-//	std::exit(-1);
-//}
 //void* thr_func(void* args)
 //{
 //	thread_struct* thr_args = (thread_struct*)args;
@@ -164,6 +156,7 @@ const double expectedMedianHanEskinHeterogeneityPart_[] = // from nStudy 2 to 50
 //		done_mtx.unlock();
 //	}
 //}
+
 //void doMetaAnalysis() 
 //{
 //	srand(seed_);
@@ -314,7 +307,7 @@ const double expectedMedianHanEskinHeterogeneityPart_[] = // from nStudy 2 to 50
 //		std::exit(-1);
 //	}
 //}
-//
+
 //void computeLambda() 
 //{
 //	double median;
@@ -352,21 +345,16 @@ int main(int argc, char* argv[])
 	op.handleArguments(argc, argv);
 	op.printArguments();
 
-	//MetaSnp::readPvalueTableFile(pvalueTableFile_);
-
-	std::cout<<"----- Performing meta-analysis\n";
-	//doMetaAnalysis();
-
-	std::cout << "---- Performing lambda compute\n";
-	//computeLambda();
-
-	std::cout << "---- print Log\n";
-	time_t endTime = time(NULL);
-	op.printLog(difftime(endTime, startTime)/SECONDS_IN_MINUTE);
-
-	std::cout<<"----- Finished\n";
+	Scheduler scheduler(&op);
+	scheduler.prepare();
+	scheduler.run();
+	scheduler.cleanUp();
 	
+	time_t endTime = time(NULL);
+	
+	op.printLog(difftime(endTime, startTime) / SECONDS_IN_MINUTE);
+	
+	std::cout<<"----- Finished\n";
 	std::cout << "----- Elapsed time: " << difftime(endTime,startTime)/60.0 << " minutes\n";
-
 	return DONE_NORMAL;
 }

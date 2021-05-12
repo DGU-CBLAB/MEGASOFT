@@ -22,6 +22,19 @@
 
 #define SECONDS_IN_MINUTE	(60.0)
 
+#define ERROR_IO				100
+#define ERROR_IO_FILE_CLOSE		101
+#define ERROR_THREAD_CREATE		200
+#define ERROR_THREAD_JOIN		201
+#define ERROR_META_ANALYSIS		300
+#define ERROR_FILE_NOT_FOUND	404
+#define ERROR_FILE_READ_FAIL	405
+
+#define DONE_NORMAL			1
+#define DONE_ABNORMAL		-1
+#define ERR_THREAD_CREATE	100
+#define ERR_THREAD_JOIN		101
+
 /// DEFAULT OPTION VALUES
 #define DEFAULT_OUTPUT_FILE					("out")
 #define DEFAULT_PVALUE_TABLE_FILE			("HanEskinPvalueTable.txt")
@@ -45,6 +58,11 @@
 #define DEFAULT_SEED						(0)
 #define DEFAULT_VERBOSE						(FALSE)
 #define DEFAULT_CPU_NUM_THREAD				(1)
+#define DEFAULT_GPU							(FALSE)
+
+// HanEskin Table
+#define HANESKIN_TABLE_ROW	(49)
+#define HANESKIN_TABLE_COL	(331)
 
 #endif
 

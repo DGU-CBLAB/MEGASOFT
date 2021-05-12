@@ -1,5 +1,6 @@
 #include"Options.h"
 #include<condition_variable>
+
 namespace po = boost::program_options;
 VOID Options::initialize()
 {
@@ -25,6 +26,7 @@ VOID Options::initialize()
 	m_seed						= DEFAULT_SEED;
 	m_isVerbose					= DEFAULT_VERBOSE;
 	m_CPUNumThread				= DEFAULT_CPU_NUM_THREAD;
+	m_gpu						= DEFAULT_GPU;
 
 	m_numSnps		= 0;
 	m_maxNumStudy	= 0;
@@ -37,6 +39,7 @@ VOID Options::printErrorAndQuit(std::string msg)
 }
 VOID Options::printLog(DOUBLE time)
 {
+	std::cout << "---- print Log\n";
 	try {
 		FILE* outFile = fopen(m_logFile.c_str(), "w");
 
@@ -88,19 +91,14 @@ VOID Options::handleArguments(INT32 argc, char* argv[])
 		("seed", po::value<int>(), "Random number generator seed (default=0)")
 		("verbose", po::bool_switch()->default_value(false), "Print RSID verbosely per every 1,000 SNPs (default=FALSE)")
 		("thread_cpu", po::value<int>(), "Set Number of CPU Threads")
+		("gpu", po::bool_switch()->default_value(false), "Use GPU(require cuda capable GPU)")
 		;
 
 	po::variables_map vm;
-	try {
-		po::store(po::parse_command_line(argc, argv, desc), vm);
-		po::notify(vm);
-	}
-	catch (po::error e)
-	{
-		std::cout << e.what() << std::endl;
-		exit(-200);
-	}
-	if (vm.count("help"))
+	po::store(po::parse_command_line(argc, argv, desc), vm);
+	po::notify(vm);
+	
+		if (vm.count("help"))
 	{
 		std::cout << desc << std::endl;
 		std::exit(1);
@@ -201,6 +199,10 @@ VOID Options::handleArguments(INT32 argc, char* argv[])
 	{
 		m_CPUNumThread = vm["thread_cpu"].as<int>();
 	}
+	if (vm["gpu"].as<bool>() == TRUE)
+	{
+		m_gpu = true;
+	}
 	if (vm.count("help"))
 	{
 		std::cout << "------------------------------------------------" << std::endl;
@@ -280,7 +282,7 @@ VOID Options::handleArguments(INT32 argc, char* argv[])
 	{
 		printErrorAndQuit("binary_effects_p_thres takes a float value between 0 and 1");
 	}
-
+	
 	// Make summary for printing
 	createSummary(argc, argv);
 }

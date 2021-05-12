@@ -18,17 +18,6 @@ FORCE_THREAD
 	#define THREAD 1
 #endif
 
-#define ERROR_IO 100
-#define ERROR_IO_FILE_CLOSE 101
-#define ERROR_THREAD_CREATE 200
-#define ERROR_THREAD_JOIN 201
-#define ERROR_META_ANALYSIS 300
-
-#define DONE_NORMAL 1
-#define DONE_ABNORMAL -1
-#define ERR_THREAD_CREATE 100
-#define ERR_THREAD_JOIN 101
-
 #include<iostream>
 #include<stdio.h>
 #include<sstream>

@@ -1,0 +1,70 @@
+@startuml SequenceDiagram
+
+MetaSoft->MetaSoft:Main()
+
+MetaSoft->MetaSoft:handleArguments()
+
+MetaSoft->MetaSnp:readPvalueTableFile()
+activate MetaSnp
+MetaSnp-->MetaSoft:
+deactivate MetaSnp
+
+MetaSoft->MetaSoft:doMetaAnalysis()
+
+activate MetaSoft
+MetaSoft->MetaSnp:printHeadings()
+MetaSnp-->MetaSoft
+
+    loop NUM_OF_THREADS
+        MetaSoft->MetaSoft:thr_func
+        loop LINES
+            MetaSoft->MetaSnp:<<<Constructor>>>
+            activate MetaSnp
+                loop nStudy
+                    alt NaStudy
+                        MetaSoft->MetaSnp:addNaStudy()
+                        MetaSnp-->MetaSoft
+                    else
+                        MetaSoft->MetaSnp:addStudy()
+                        MetaSnp-->MetaSoft
+                    else
+                end
+
+                MetaSoft->MetaSnp:initMem()
+                MetaSnp-->MetaSoft
+
+                MetaSoft->MetaSnp:computeFixedEffects()
+                MetaSnp-->MetaSoft
+
+                MetaSoft->MetaSnp:computeRandomEffects()
+                MetaSnp-->MetaSoft
+                
+                MetaSoft->MetaSnp:computeHaneEskin()
+                MetaSnp-->MetaSoft
+
+                MetaSoft->MetaSnp:getStatisticHanEskinHeterogeneityPart()
+                MetaSnp-->MetaSoft
+
+                alt willComputeBinaryEffects_
+                    MetaSoft->MetaSnp:computeBinaryEffectsPvalue()
+                    MetaSnp-->MetaSoft
+
+                    alt MetaSoft->MetaSnp:getPvalueBinaryEffects() <= binaryEffectsPvalueThreshold_
+                    MetaSoft->MetaSnp:computeBinaryEffectsPvalue()
+                    MetaSnp-->MetaSoft
+                    end
+
+                end
+
+                alt willComputeMvalue_
+                    
+                end
+
+            deactivate MetaSnp
+        end
+    end
+MetaSoft->MetaSnp:printHeadings()
+MetaSnp-->MetaSoft
+deactivate MetaSoft
+
+@enduml

@@ -28,6 +28,7 @@ private:
 	UINT32	m_seed;
 	BOOL	m_isVerbose;
 	UINT32	m_CPUNumThread;
+	BOOL	m_gpu;
 
 	UINT32	m_numSnps;
 	UINT32	m_maxNumStudy;
@@ -45,4 +46,6 @@ public:
 	VOID printLog(DOUBLE time);
 	VOID printArguments(VOID);
 	VOID printErrorAndQuit(std::string msg);
+
+	std::string getPvalueTableFile(VOID) { return m_pvalueTableFile; }
 };

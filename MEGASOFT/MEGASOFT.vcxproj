@@ -22,12 +22,14 @@
     <ClCompile Include="MetaSnp.cpp" />
     <ClCompile Include="MetaSoft.cpp" />
     <ClCompile Include="Options.cpp" />
+    <ClCompile Include="Scheduler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Config.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="MetaSnp.h" />
     <ClInclude Include="Options.h" />
+    <ClInclude Include="Scheduler.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\TestData\inputMS.txt" />
