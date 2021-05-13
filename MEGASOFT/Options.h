@@ -39,13 +39,25 @@ public:
 	{
 		initialize();
 	}
+
+	static VOID printErrorAndQuit(std::string msg);
+
 	VOID initialize();
 	VOID handleArguments(INT32 argc, char* argv[]);
 	VOID createSummary(INT32 argc, char* argv[]);
 	
 	VOID printLog(DOUBLE time);
 	VOID printArguments(VOID);
-	VOID printErrorAndQuit(std::string msg);
 
 	std::string getPvalueTableFile(VOID) { return m_pvalueTableFile; }
+
+	UINT32 getSeed(VOID) { return m_seed; }
+	std::string getInputFile(VOID) { return m_inputFile; }
+	std::string getOutputFile(VOID) { return m_outputFile; }
+	UINT32 getMaxNumStudy(VOID) { return m_maxNumStudy; }
+
+	VOID setNumSnps(UINT32 numSnps) { m_numSnps = numSnps; }
+	VOID setMaxNumStudy(UINT32 maxNumStudy) { m_maxNumStudy = maxNumStudy; }
+	VOID setOutputLambdaMeanEffect(DOUBLE outputLambdaMeanEffect) { m_outputLambdaMeanEffect = outputLambdaMeanEffect; }
+	VOID setOutputLambdaHeterogeneity(DOUBLE outputLambdaHeterogeneity) { m_outputLambdaHeterogeneity = outputLambdaHeterogeneity; }
 };

@@ -20,6 +20,14 @@
 #define TRUE	true
 #define FALSE	false
 
+#define FILE_READ	("r")
+#define FILE_WRITE	("w")
+
+#define DELIM_TAB	"\t"
+#define DELIM_SPACE	" "
+
+#define CHAR_SHARP '#'
+
 #define SECONDS_IN_MINUTE	(60.0)
 
 #define ERROR_IO				100

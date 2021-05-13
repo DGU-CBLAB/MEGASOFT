@@ -19,16 +19,22 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AnalysisData.cpp" />
+    <ClCompile Include="CPU_Analysis.cpp" />
     <ClCompile Include="MetaSnp.cpp" />
     <ClCompile Include="MetaSoft.cpp" />
     <ClCompile Include="Options.cpp" />
+    <ClCompile Include="ResultPrinter.cpp" />
     <ClCompile Include="Scheduler.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AnalysisData.h" />
     <ClInclude Include="Config.h" />
+    <ClInclude Include="CPU_Analysis.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="MetaSnp.h" />
     <ClInclude Include="Options.h" />
+    <ClInclude Include="ResultPrinter.h" />
     <ClInclude Include="Scheduler.h" />
   </ItemGroup>
   <ItemGroup>
